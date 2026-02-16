@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DOORFUSE — Why Counting Bus Passengers Is Harder Than You Think</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #06090f;
+  --surface: #0d1320;
+  --surface-raised: #111c2e;
+  --border: #1a2640;
+  --border-glow: #243352;
+  --text: #e4eaf2;
+  --text-dim: #7a8da8;
+  --text-muted: #3d5070;
+  --accent: #38bdf8;
+  --accent-glow: rgba(56, 189, 248, 0.08);
+  --violet: #a78bfa;
+  --green: #34d399;
+  --green-glow: rgba(52, 211, 153, 0.08);
+  --red: #f87171;
+  --red-glow: rgba(248, 113, 113, 0.06);
+  --orange: #fb923c;
+  --orange-glow: rgba(251, 146, 60, 0.08);
+  --pink: #f472b6;
+  --yellow: #fbbf24;
+  --cyan: #22d3ee;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  overflow-x: hidden;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ─── STICKY NAV ─── */
+.stage-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  gap: 3px;
+  padding: 14px 12px 12px;
+  background: linear-gradient(180deg, var(--bg) 60%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  flex-wrap: wrap;
+}
+.stage-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 600;
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.stage-btn:hover { border-color: var(--accent); color: var(--text-dim); }
+.stage-btn.active {
+  background: var(--accent-glow);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 20px rgba(56,189,248,0.08);
+}
+
+.container { max-width: 820px; margin: 0 auto; padding: 0 28px; }
+.section-anchor { scroll-margin-top: 70px; }
+
+/* ─── HERO ─── */
+.hero {
+  min-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  padding: 60px 28px;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 900px;
+  height: 900px;
+  background: radial-gradient(circle, rgba(56,189,248,0.04) 0%, rgba(167,139,250,0.02) 40%, transparent 70%);
+  pointer-events: none;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0; right: 0;
+  height: 200px;
+  background: linear-gradient(transparent, var(--bg));
+  pointer-events: none;
+}
+
+.badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  padding: 6px 16px;
+  border: 1px solid var(--border-glow);
+  border-radius: 20px;
+  color: var(--text-muted);
+  margin-bottom: 36px;
+  background: var(--surface);
+}
+
+.hero h1 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(2.8rem, 6vw, 4.5rem);
+  font-weight: 700;
+  letter-spacing: -3px;
+  line-height: 1;
+  margin-bottom: 28px;
+}
+.word-door {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--cyan) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.word-fuse {
+  background: linear-gradient(135deg, var(--violet) 0%, var(--pink) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-tagline {
+  font-size: 1.15rem;
+  color: var(--text-dim);
+  max-width: 540px;
+  line-height: 1.7;
+  margin-bottom: 48px;
+}
+.hero-tagline em {
+  color: var(--text);
+  font-style: normal;
+  font-weight: 500;
+}
+
+.hero-number {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 56px;
+}
+.hero-number .big {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 4.5rem;
+  font-weight: 700;
+  color: var(--green);
+  line-height: 1;
+  letter-spacing: -3px;
+}
+.hero-number .context {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  text-align: left;
+}
+.hero-number .context strong { color: var(--text-dim); }
+
+.scroll-hint {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  animation: float 2.5s ease-in-out infinite;
+}
+.scroll-hint span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.scroll-arrow {
+  width: 16px; height: 16px;
+  border-right: 1.5px solid var(--text-muted);
+  border-bottom: 1.5px solid var(--text-muted);
+  transform: rotate(45deg);
+}
+@keyframes float {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(8px); }
+}
+
+/* ─── SECTIONS ─── */
+.section-break { padding: 100px 0 50px; }
+.section-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(1.3rem, 2.8vw, 1.7rem);
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 14px;
+}
+.section-headline {
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--text-dim);
+  max-width: 600px;
+}
+
+/* ─── SVG SCENE ─── */
+.scene {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  margin: 40px 0;
+}
+.doorway-visual {
+  width: 100%;
+  height: 420px;
+  background: linear-gradient(180deg, #0a1018, #0d1824);
+  overflow: hidden;
+}
+.doorway-visual svg { width: 100%; height: 100%; }
+.scene-caption {
+  padding: 20px 24px;
+  border-top: 1px solid var(--border);
+}
+.scene-caption p { font-size: 0.84rem; color: var(--text-dim); line-height: 1.65; }
+.scene-caption .hl-red { color: var(--red); font-weight: 500; }
+.scene-caption .hl-green { color: var(--green); font-weight: 500; }
+
+@keyframes pulse-zone {
+  0%, 100% { opacity: 0.12; }
+  50% { opacity: 0.3; }
+}
+.pulse-zone { animation: pulse-zone 2.5s ease-in-out infinite; }
+
+/* ─── FAILURE ROWS ─── */
+.failures {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 32px 0 60px;
+}
+.failure-row {
+  display: flex;
+  align-items: stretch;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+.failure-row:first-child { border-radius: 14px 14px 0 0; }
+.failure-row:last-child { border-radius: 0 0 14px 14px; }
+.failure-row:hover { border-color: var(--border-glow); }
+.failure-ind { width: 4px; flex-shrink: 0; }
+.failure-body { padding: 22px 24px; flex: 1; }
+.failure-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.failure-desc { font-size: 0.82rem; color: var(--text-dim); line-height: 1.6; }
+.failure-impact {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 4px;
+  margin-top: 10px;
+  display: inline-block;
+}
+
+/* ─── EQUATION ─── */
+.equation-strip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 32px;
+  text-align: center;
+  margin: 24px 0;
+  position: relative;
+  overflow: hidden;
+}
+.equation-strip::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--violet), var(--pink), var(--orange), var(--green));
+}
+.equation {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+}
+.eq-fn { color: var(--accent); }
+.eq-sum { color: var(--violet); }
+.eq-w { color: var(--orange); }
+.eq-s { color: var(--green); }
+
+/* ─── SIGNAL STRIP ─── */
+.signal-strip {
+  display: flex;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  height: 180px;
+  margin: 24px 0;
+}
+.signal-seg {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 8px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  position: relative;
+  transition: all 0.4s;
+  cursor: default;
+  overflow: hidden;
+}
+.signal-seg:last-child { border-right: none; }
+.signal-seg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.signal-seg:hover::before { opacity: 1; }
+.signal-seg:nth-child(1)::before { background: linear-gradient(180deg, rgba(56,189,248,0.06), transparent 60%); }
+.signal-seg:nth-child(2)::before { background: linear-gradient(180deg, rgba(167,139,250,0.06), transparent 60%); }
+.signal-seg:nth-child(3)::before { background: linear-gradient(180deg, rgba(244,114,182,0.06), transparent 60%); }
+.signal-seg:nth-child(4)::before { background: linear-gradient(180deg, rgba(251,146,60,0.06), transparent 60%); }
+.signal-seg:nth-child(5)::before { background: linear-gradient(180deg, rgba(52,211,153,0.06), transparent 60%); }
+.sig-icon { font-size: 1.6rem; margin-bottom: 10px; position: relative; z-index: 1; }
+.sig-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  line-height: 1.4;
+}
+.sig-weight {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.6rem;
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
+  margin-top: 8px;
+}
+
+/* ─── PIPELINE ─── */
+.pipe-steps {
+  display: flex;
+  position: relative;
+  margin: 40px 0;
+}
+.pipe-steps::before {
+  content: '';
+  position: absolute;
+  top: 28px;
+  left: 40px; right: 40px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--cyan), var(--accent), var(--green), var(--violet), var(--pink));
+  opacity: 0.3;
+}
+.pipe-step {
+  flex: 1;
+  text-align: center;
+  padding: 0 6px;
+  position: relative;
+}
+.pipe-dot {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  margin: 0 auto 14px;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pipe-dot::before {
+  content: '';
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.pipe-dot::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.15;
+}
+.pipe-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.pipe-detail {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* ─── COMPARISON ─── */
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  border-radius: 14px;
+  overflow: hidden;
+  margin: 40px 0;
+}
+.compare-side {
+  padding: 36px 28px;
+  text-align: center;
+  position: relative;
+}
+.compare-side.before { background: linear-gradient(135deg, rgba(248,113,113,0.04), var(--surface) 60%); }
+.compare-side.after  { background: linear-gradient(135deg, rgba(52,211,153,0.04), var(--surface) 60%); }
+.compare-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.compare-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 3.5rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 6px;
+  letter-spacing: -2px;
+}
+.compare-unit {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.compare-detail {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 14px;
+  line-height: 1.5;
+}
+.compare-arrow {
+  position: absolute;
+  top: 50%; right: -14px;
+  transform: translateY(-50%);
+  width: 28px; height: 28px;
+  background: var(--bg);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* ─── CITIES ─── */
+.cities {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 40px 0;
+}
+.city {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px 24px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+.city:hover { border-color: var(--border-glow); }
+.city::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.city:first-child::before { background: linear-gradient(90deg, #000 33%, #b22234 33% 66%, #009e49 66%); }
+.city:last-child::before  { background: linear-gradient(90deg, #00a1de 33%, #fad201 33% 66%, #20603d 66%); }
+.city-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+.city-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+.city-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 8px 0;
+  border-top: 1px solid rgba(26,38,64,0.5);
+}
+.city-row-label { font-size: 0.78rem; color: var(--text-dim); }
+.city-row-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* ─── CTA ─── */
+.cta-section {
+  text-align: center;
+  padding: 80px 28px 100px;
+  position: relative;
+}
+.cta-section::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(56,189,248,0.03), transparent 60%);
+  pointer-events: none;
+}
+.cta-headline {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(1.3rem, 2.8vw, 1.8rem);
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 16px;
+  line-height: 1.3;
+}
+.cta-sub {
+  font-size: 0.92rem;
+  color: var(--text-dim);
+  max-width: 480px;
+  margin: 0 auto 36px;
+  line-height: 1.7;
+}
+.cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 14px 32px;
+  border: 1px solid var(--accent);
+  background: var(--accent-glow);
+  color: var(--accent);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-decoration: none;
+}
+.cta-btn:hover {
+  background: rgba(56,189,248,0.15);
+  box-shadow: 0 0 30px rgba(56,189,248,0.1);
+  transform: translateY(-2px);
+}
+.cta-details {
+  margin-top: 40px;
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+.cta-det { text-align: center; }
+.cta-det-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.cta-det-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.55rem;
+  color: var(--text-muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.footer {
+  text-align: center;
+  padding: 32px 28px;
+  border-top: 1px solid var(--border);
+}
+.footer p {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ─── ANIMATIONS ─── */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-d1 { transition-delay: 0.1s; }
+.reveal-d2 { transition-delay: 0.2s; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 640px) {
+  .hero h1 { letter-spacing: -2px; }
+  .hero-number { flex-direction: column; align-items: center; gap: 8px; }
+  .hero-number .context { text-align: center; }
+  .compare-grid { grid-template-columns: 1fr; }
+  .compare-arrow { display: none; }
+  .cities { grid-template-columns: 1fr; }
+  .signal-strip { flex-direction: column; height: auto; }
+  .signal-seg { padding: 16px; flex-direction: row; gap: 14px; justify-content: flex-start; border-right: none; border-bottom: 1px solid var(--border); }
+  .signal-seg:last-child { border-bottom: none; }
+  .pipe-steps { flex-direction: column; gap: 16px; }
+  .pipe-steps::before { display: none; }
+  .stage-btn { padding: 5px 10px; font-size: 0.55rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ STICKY NAV ═══ -->
+<nav class="stage-nav">
+  <button class="stage-btn active" onclick="scrollTo('hero')">01 OVERVIEW</button>
+  <button class="stage-btn" onclick="scrollTo('problem')">02 PROBLEM</button>
+  <button class="stage-btn" onclick="scrollTo('idea')">03 IDEA</button>
+  <button class="stage-btn" onclick="scrollTo('approach')">04 APPROACH</button>
+  <button class="stage-btn" onclick="scrollTo('results')">05 RESULTS</button>
+  <button class="stage-btn" onclick="scrollTo('paper')">06 FULL PAPER</button>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<div class="hero section-anchor" id="hero">
+  <div class="badge">UNDER REVIEW</div>
+  <h1><span class="word-door">DOOR</span><span class="word-fuse">FUSE</span></h1>
+  <p class="hero-tagline">
+    Every transit agency wants to know how many people get on and off their buses. Sounds simple. <em>It isn't.</em>
+  </p>
+  <div class="hero-number">
+    <span class="big">82%</span>
+    <span class="context">fewer counting errors<br><strong>vs. state-of-art tracking</strong></span>
+  </div>
+  <div class="scroll-hint">
+    <span>The problem</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</div>
+
+<!-- ═══ 02 — PROBLEM ═══ -->
+<div class="container">
+  <div class="section-anchor" id="problem"></div>
+  <div class="section-break reveal">
+    <h2 class="section-label" style="color: var(--red);">02 — The Problem</h2>
+    <h3 class="section-headline">The doorway is a <span style="color: var(--red);">chaos zone.</span></h3>
+  </div>
+
+  <div class="scene reveal reveal-d1">
+    <div class="doorway-visual">
+      <svg viewBox="0 0 820 420" xmlns="http://www.w3.org/2000/svg" fill="none">
+        <rect x="0" y="0" width="820" height="420" fill="#0a1018"/>
+        <!-- Interior -->
+        <rect x="0" y="40" width="340" height="340" rx="4" fill="#0e1520" stroke="#1a2640"/>
+        <text x="170" y="210" text-anchor="middle" fill="#3d5070" font-family="JetBrains Mono" font-size="11" letter-spacing="2">BUS INTERIOR</text>
+        <!-- Platform -->
+        <rect x="480" y="40" width="340" height="340" rx="4" fill="#0c1218" stroke="#1a2640"/>
+        <text x="650" y="210" text-anchor="middle" fill="#3d5070" font-family="JetBrains Mono" font-size="11" letter-spacing="2">PLATFORM</text>
+        <!-- Door zone -->
+        <rect x="340" y="40" width="140" height="340" fill="#1a0a0a"/>
+        <rect x="340" y="40" width="140" height="340" fill="#f8717118" class="pulse-zone"/>
+        <rect x="340" y="40" width="1" height="340" stroke="#f87171" stroke-dasharray="4 6" opacity="0.4"/>
+        <rect x="480" y="40" width="1" height="340" stroke="#f87171" stroke-dasharray="4 6" opacity="0.4"/>
+        <text x="410" y="28" text-anchor="middle" fill="#f87171" font-family="JetBrains Mono" font-size="9" font-weight="600" letter-spacing="2.5" opacity="0.7">DOOR ZONE</text>
+        <!-- Counting line -->
+        <line x1="410" y1="40" x2="410" y2="380" stroke="#f87171" stroke-width="1.5" stroke-dasharray="6 4" opacity="0.5"/>
+        <text x="410" y="398" text-anchor="middle" fill="#f87171" font-family="JetBrains Mono" font-size="8" opacity="0.5" letter-spacing="1">COUNTING LINE</text>
+        <!-- P1: Real boarding -->
+        <circle cx="390" cy="120" r="14" fill="#34d39930" stroke="#34d399" stroke-width="1.5"/>
+        <text x="390" y="124" text-anchor="middle" fill="#34d399" font-family="JetBrains Mono" font-size="10" font-weight="600">P1</text>
+        <path d="M520 120 L390 120" stroke="#34d399" stroke-width="1" stroke-dasharray="3 3" opacity="0.4"/>
+        <polygon points="395,116 385,120 395,124" fill="#34d39960"/>
+        <!-- P2: False positive -->
+        <circle cx="430" cy="180" r="14" fill="#f8717130" stroke="#f87171" stroke-width="1.5"/>
+        <text x="430" y="184" text-anchor="middle" fill="#f87171" font-family="JetBrains Mono" font-size="10" font-weight="600">P2</text>
+        <path d="M430 200 L420 210 L440 220 L425 230" stroke="#f87171" stroke-width="1" stroke-dasharray="2 2" opacity="0.5"/>
+        <rect x="442" y="170" width="55" height="16" rx="3" fill="#f8717120" stroke="#f87171" stroke-width="0.5" opacity="0.7"/>
+        <text x="469" y="181" text-anchor="middle" fill="#f87171" font-family="JetBrains Mono" font-size="7" font-weight="600">FALSE +</text>
+        <!-- P3: Double count -->
+        <circle cx="380" cy="260" r="14" fill="#fb923c30" stroke="#fb923c" stroke-width="1.5"/>
+        <text x="380" y="264" text-anchor="middle" fill="#fb923c" font-family="JetBrains Mono" font-size="10" font-weight="600">P3</text>
+        <circle cx="370" cy="260" r="10" fill="none" stroke="#fb923c" stroke-dasharray="2 2" opacity="0.4"/>
+        <text x="350" y="250" fill="#fb923c" font-family="JetBrains Mono" font-size="6" opacity="0.6">ID: 17</text>
+        <text x="402" y="250" fill="#fb923c" font-family="JetBrains Mono" font-size="6" opacity="0.6">ID: 31</text>
+        <rect x="346" y="278" width="68" height="16" rx="3" fill="#fb923c20" stroke="#fb923c" stroke-width="0.5" opacity="0.7"/>
+        <text x="380" y="289" text-anchor="middle" fill="#fb923c" font-family="JetBrains Mono" font-size="7" font-weight="600">DOUBLE CT</text>
+        <!-- P4: Missed -->
+        <circle cx="410" cy="330" r="14" fill="#7a8da820" stroke="#7a8da8" stroke-dasharray="3 3"/>
+        <text x="410" y="334" text-anchor="middle" fill="#7a8da8" font-family="JetBrains Mono" font-size="10" font-weight="600">P4</text>
+        <circle cx="420" cy="320" r="16" fill="#1a264090" stroke="#3d5070"/>
+        <rect x="384" y="348" width="52" height="16" rx="3" fill="#3d507020" stroke="#3d5070" stroke-width="0.5" opacity="0.7"/>
+        <text x="410" y="359" text-anchor="middle" fill="#7a8da8" font-family="JetBrains Mono" font-size="7" font-weight="600">MISSED</text>
+        <!-- Staff -->
+        <circle cx="400" cy="80" r="12" fill="#fbbf2430" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="400" y="84" text-anchor="middle" fill="#fbbf24" font-family="JetBrains Mono" font-size="9" font-weight="600">S</text>
+        <rect x="418" y="72" width="42" height="16" rx="3" fill="#fbbf2420" stroke="#fbbf24" stroke-width="0.5" opacity="0.7"/>
+        <text x="439" y="83" text-anchor="middle" fill="#fbbf24" font-family="JetBrains Mono" font-size="7" font-weight="600">STAFF</text>
+        <!-- Naive count -->
+        <rect x="20" y="360" width="140" height="42" rx="8" fill="#f8717110" stroke="#f87171" opacity="0.8"/>
+        <text x="90" y="376" text-anchor="middle" fill="#f87171" font-family="JetBrains Mono" font-size="8" letter-spacing="1.5" font-weight="600">NAIVE COUNT</text>
+        <text x="90" y="394" text-anchor="middle" fill="#f87171" font-family="JetBrains Mono" font-size="14" font-weight="700">IN: 4  OUT: 1</text>
+        <!-- Ground truth -->
+        <rect x="660" y="360" width="140" height="42" rx="8" fill="#34d39910" stroke="#34d399" opacity="0.8"/>
+        <text x="730" y="376" text-anchor="middle" fill="#34d399" font-family="JetBrains Mono" font-size="8" letter-spacing="1.5" font-weight="600">GROUND TRUTH</text>
+        <text x="730" y="394" text-anchor="middle" fill="#34d399" font-family="JetBrains Mono" font-size="14" font-weight="700">IN: 2  OUT: 0</text>
+      </svg>
+    </div>
+    <div class="scene-caption">
+      <p>A single stop on a Nairobi bus. The naive tracker reports <span class="hl-red">IN: 4, OUT: 1</span>. The truth is <span class="hl-green">IN: 2, OUT: 0</span>. Every failure mode is present at once — a queuing passenger triggers a false crossing, a track break causes a double count, an occluded person is missed, and a staff member is counted as boarding.</p>
+    </div>
+  </div>
+
+  <div class="failures reveal">
+    <div class="failure-row">
+      <div class="failure-ind" style="background: var(--red);"></div>
+      <div class="failure-body">
+        <div class="failure-title" style="color: var(--red);">Closed-Door False Positives</div>
+        <div class="failure-desc">People queuing near the threshold while doors are shut. Their movement intersects the counting region — producing crossings that never happened.</div>
+        <div class="failure-impact" style="background: var(--red-glow); color: var(--red);">+40–60% overcount on busy routes</div>
+      </div>
+    </div>
+    <div class="failure-row">
+      <div class="failure-ind" style="background: var(--orange);"></div>
+      <div class="failure-body">
+        <div class="failure-title" style="color: var(--orange);">ID Fragmentation</div>
+        <div class="failure-desc">Occlusion at door steps breaks tracks. One person exits, gets lost behind a pillar, reappears as a new identity. The counter sees two where there was one.</div>
+        <div class="failure-impact" style="background: var(--orange-glow); color: var(--orange);">Up to 2× inflation during rush hour</div>
+      </div>
+    </div>
+    <div class="failure-row">
+      <div class="failure-ind" style="background: var(--yellow);"></div>
+      <div class="failure-body">
+        <div class="failure-title" style="color: var(--yellow);">Non-Passenger Contamination</div>
+        <div class="failure-desc">Conductors, touts, and vendors move through the door zone repeatedly — each crossing a potential phantom passenger.</div>
+        <div class="failure-impact" style="background: rgba(251,191,36,0.08); color: var(--yellow);">+99 signed error on Kenya data alone</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 03 — IDEA ═══ -->
+  <div class="section-anchor" id="idea"></div>
+  <div class="section-break reveal">
+    <h2 class="section-label" style="color: var(--violet);">03 — The Idea</h2>
+    <h3 class="section-headline">A single signal can't resolve the doorway. <span style="color: var(--violet);">Five can.</span></h3>
+  </div>
+
+  <p class="reveal" style="color: var(--text-dim); font-size: 0.9rem; max-width: 600px; margin-bottom: 36px;">
+    Each crossing event is scored across five independent signals. When one degrades — as pose estimation does under heavy crowding — the others compensate.
+  </p>
+
+  <div class="equation-strip reveal">
+    <div class="equation">
+      <span class="eq-fn">Score(e)</span> = <span class="eq-sum">Σ</span> <span class="eq-w">wᵢ</span> · <span class="eq-s">sᵢ(e)</span>
+    </div>
+  </div>
+
+  <div class="signal-strip reveal">
+    <div class="signal-seg">
+      <div class="sig-icon">↗</div>
+      <div class="sig-label" style="color: var(--accent);">Trajectory</div>
+      <div class="sig-weight" style="color: var(--accent);">0.30</div>
+    </div>
+    <div class="signal-seg">
+      <div class="sig-icon">🧭</div>
+      <div class="sig-label" style="color: var(--violet);">Orientation</div>
+      <div class="sig-weight" style="color: var(--violet);">0.25</div>
+    </div>
+    <div class="signal-seg">
+      <div class="sig-icon">👤</div>
+      <div class="sig-label" style="color: var(--pink);">Biometric</div>
+      <div class="sig-weight" style="color: var(--pink);">0.20</div>
+    </div>
+    <div class="signal-seg">
+      <div class="sig-icon">⚡</div>
+      <div class="sig-label" style="color: var(--orange);">Motion</div>
+      <div class="sig-weight" style="color: var(--orange);">0.15</div>
+    </div>
+    <div class="signal-seg">
+      <div class="sig-icon">📏</div>
+      <div class="sig-label" style="color: var(--green);">Consistency</div>
+      <div class="sig-weight" style="color: var(--green);">0.10</div>
+    </div>
+  </div>
+
+  <p class="reveal" style="color: var(--text-muted); font-size: 0.82rem; text-align: center; font-style: italic; margin-bottom: 20px;">
+    Weights shift automatically under crowding. When shoulders are hidden, trajectory takes over.
+  </p>
+
+  <!-- ═══ 04 — APPROACH ═══ -->
+  <div class="section-anchor" id="approach"></div>
+  <div class="section-break reveal">
+    <h2 class="section-label" style="color: var(--accent);">04 — The Approach</h2>
+    <h3 class="section-headline">Five stages. Raw CCTV in, <span style="color: var(--accent);">stop-level counts out.</span></h3>
+  </div>
+
+  <div class="reveal">
+    <div class="pipe-steps">
+      <div class="pipe-step">
+        <div class="pipe-dot" style="color: var(--cyan);"></div>
+        <div class="pipe-name" style="color: var(--cyan);">Sync</div>
+        <div class="pipe-detail">OCR timestamps align video to GPS stops</div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-dot" style="color: var(--accent);"></div>
+        <div class="pipe-name" style="color: var(--accent);">Track</div>
+        <div class="pipe-detail">Dual-detector + ghost injection for occlusion</div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-dot" style="color: var(--green);"></div>
+        <div class="pipe-name" style="color: var(--green);">Gate</div>
+        <div class="pipe-detail">Door-state classifier suppresses closed-door noise</div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-dot" style="color: var(--violet);"></div>
+        <div class="pipe-name" style="color: var(--violet);">Fuse</div>
+        <div class="pipe-detail">5-signal scoring with crowd-adaptive weights</div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-dot" style="color: var(--pink);"></div>
+        <div class="pipe-name" style="color: var(--pink);">Count</div>
+        <div class="pipe-detail">Stop aggregation — official + informal stops</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 05 — RESULTS ═══ -->
+  <div class="section-anchor" id="results"></div>
+  <div class="section-break reveal">
+    <h2 class="section-label" style="color: var(--green);">05 — The Result</h2>
+    <h3 class="section-headline">From <span style="color: var(--red);">unusable</span> to <span style="color: var(--green);">operational.</span></h3>
+  </div>
+
+  <div class="reveal">
+    <div class="compare-grid">
+      <div class="compare-side before">
+        <div class="compare-tag" style="color: var(--red);">Baseline</div>
+        <div class="compare-num" style="color: var(--red);">6.2</div>
+        <div class="compare-unit">Mean Absolute Error</div>
+        <div class="compare-detail">YOLOv12 + BoT-SORT<br>line-crossing counter</div>
+        <div class="compare-arrow">→</div>
+      </div>
+      <div class="compare-side after">
+        <div class="compare-tag" style="color: var(--green);">DOORFUSE</div>
+        <div class="compare-num" style="color: var(--green);">1.1</div>
+        <div class="compare-unit">Mean Absolute Error</div>
+        <div class="compare-detail">Five-signal fusion<br>+ door-aware gating</div>
+      </div>
+    </div>
+  </div>
+
+  <p class="reveal" style="color: var(--text-dim); font-size: 0.88rem; text-align: center; max-width: 500px; margin: 0 auto 24px;">
+    Tested on 4.2 hours of real bus footage across two cities, four bus types, and three camera modalities.
+  </p>
+
+  <div class="cities reveal">
+    <div class="city">
+      <div class="city-name">Nairobi</div>
+      <div class="city-sub">Kenya · Bidirectional Doors</div>
+      <div class="city-row">
+        <span class="city-row-label">Key challenge</span>
+        <span class="city-row-val" style="color: var(--orange);">Staff/tout filtering</span>
+      </div>
+      <div class="city-row">
+        <span class="city-row-label">Entry MAE</span>
+        <span class="city-row-val"><span style="color:var(--red); text-decoration: line-through; opacity: 0.5;">15.0</span> → <span style="color:var(--green);">2.7</span></span>
+      </div>
+      <div class="city-row">
+        <span class="city-row-label">F1 Score</span>
+        <span class="city-row-val" style="color: var(--green);">0.91</span>
+      </div>
+    </div>
+    <div class="city">
+      <div class="city-name">Kigali</div>
+      <div class="city-sub">Rwanda · Unidirectional Doors</div>
+      <div class="city-row">
+        <span class="city-row-label">Key challenge</span>
+        <span class="city-row-val" style="color: var(--violet);">Cross-camera ReID</span>
+      </div>
+      <div class="city-row">
+        <span class="city-row-label">Exit MAE</span>
+        <span class="city-row-val"><span style="color:var(--red); text-decoration: line-through; opacity: 0.5;">3.2</span> → <span style="color:var(--green);">0.6</span></span>
+      </div>
+      <div class="city-row">
+        <span class="city-row-label">F1 Score</span>
+        <span class="city-row-val" style="color: var(--green);">0.95</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 06 — FULL PAPER ═══ -->
+<div class="section-anchor" id="paper"></div>
+<div class="cta-section">
+  <div class="cta-headline">Full ablation, parameters, and per-clip breakdowns<br>are in the paper.</div>
+  <div class="cta-sub">
+    How does each signal contribute? What happens when the camera switches from color to infrared mid-video? How do you filter a conductor who stands in the door for 15 seconds?
+  </div>
+  <a class="cta-btn" href="#">Full Paper ↗</a>
+  <div class="cta-details">
+    <div class="cta-det">
+      <div class="cta-det-val">24 clips</div>
+      <div class="cta-det-label">Evaluated</div>
+    </div>
+    <div class="cta-det">
+      <div class="cta-det-val">4 bus types</div>
+      <div class="cta-det-label">Tested</div>
+    </div>
+    <div class="cta-det">
+      <div class="cta-det-val">3 modalities</div>
+      <div class="cta-det-label">Color · B&W · IR</div>
+    </div>
+    <div class="cta-det">
+      <div class="cta-det-val">5 ablations</div>
+      <div class="cta-det-label">Each component isolated</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <p>DOORFUSE — Door-Aware Multi-Signal Fusion for Stop-Level Bus Passenger Counting</p>
+  <p style="margin-top: 4px;">Nairobi · Kigali 2025</p>
+</div>
+
+<script>
+// Smooth scroll
+function scrollTo(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Scroll reveal
+const reveals = document.querySelectorAll('.reveal');
+const revealObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+reveals.forEach(el => revealObs.observe(el));
+
+// Active nav highlighting
+const navBtns = document.querySelectorAll('.stage-btn');
+const anchors = document.querySelectorAll('.section-anchor');
+const navObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const id = e.target.id;
+      navBtns.forEach(b => {
+        b.classList.toggle('active', b.getAttribute('onclick')?.includes(id));
+      });
+    }
+  });
+}, { threshold: 0.25, rootMargin: '-70px 0px -50% 0px' });
+anchors.forEach(a => navObs.observe(a));
+</script>
+</body>
+</html>

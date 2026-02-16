@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vision-Based Transit Analytics — Research Portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Overpass:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07090f;
+  --bg2: #0c1019;
+  --surface: #111827;
+  --surface2: #161d2e;
+  --border: #1c2640;
+  --border-light: #253050;
+  --text: #e4e8f0;
+  --text-dim: #8090aa;
+  --text-mute: #4a5670;
+  --cyan: #38bdf8;
+  --cyan-dim: rgba(56,189,248,0.12);
+  --green: #34d399;
+  --green-dim: rgba(52,211,153,0.12);
+  --pink: #f472b6;
+  --pink-dim: rgba(244,114,182,0.12);
+  --orange: #fb923c;
+  --orange-dim: rgba(251,146,60,0.12);
+  --purple: #a78bfa;
+  --purple-dim: rgba(167,139,250,0.12);
+  --red: #f87171;
+  --yellow: #fbbf24;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Overpass', sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ═══════════ GRAIN OVERLAY ═══════════ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ═══════════ HERO ═══════════ */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 80px 40px;
+  overflow: hidden;
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 40%, rgba(56,189,248,0.04), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 60%, rgba(167,139,250,0.03), transparent),
+    radial-gradient(ellipse 50% 30% at 50% 80%, rgba(244,114,182,0.02), transparent);
+  pointer-events: none;
+}
+
+/* Animated grid */
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(56,189,248,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56,189,248,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 20%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-content {
+  position: relative;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.hero-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--cyan);
+  margin-bottom: 20px;
+  opacity: 0;
+  animation: fadeIn 0.8s 0.2s ease forwards;
+}
+.hero-eyebrow span {
+  background: var(--cyan-dim);
+  padding: 4px 10px;
+  border-radius: 3px;
+  border: 1px solid rgba(56,189,248,0.15);
+}
+
+.hero h1 {
+  font-family: 'Source Serif 4', serif;
+  font-size: clamp(2.2rem, 5vw, 3.8rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--text);
+  margin-bottom: 24px;
+  opacity: 0;
+  animation: fadeUp 0.8s 0.4s ease forwards;
+}
+.hero h1 em {
+  font-style: italic;
+  color: var(--cyan);
+}
+
+.hero-desc {
+  font-size: 1.05rem;
+  line-height: 1.8;
+  color: var(--text-dim);
+  max-width: 680px;
+  margin-bottom: 40px;
+  opacity: 0;
+  animation: fadeUp 0.8s 0.6s ease forwards;
+}
+
+/* Challenge pills */
+.challenge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 50px;
+  opacity: 0;
+  animation: fadeUp 0.8s 0.8s ease forwards;
+}
+.challenge-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.5px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  background: var(--surface);
+}
+.challenge-pill.hot { border-color: rgba(248,113,113,0.3); color: var(--red); background: rgba(248,113,113,0.06); }
+.challenge-pill.warn { border-color: rgba(251,191,36,0.3); color: var(--yellow); background: rgba(251,191,36,0.06); }
+
+/* Project cards in hero */
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  opacity: 0;
+  animation: fadeUp 0.8s 1.0s ease forwards;
+}
+@media (max-width: 800px) { .project-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 500px) { .project-grid { grid-template-columns: 1fr; } }
+
+.project-card {
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  transition: all 0.35s;
+  position: relative;
+  overflow: hidden;
+}
+.project-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 12px 12px 0 0;
+}
+.project-card:hover {
+  border-color: var(--border-light);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+}
+
+.project-card[data-project="doorfuse"]::before { background: var(--cyan); }
+.project-card[data-project="digitaltwin"]::before { background: var(--purple); }
+.project-card[data-project="privacy"]::before { background: var(--green); }
+.project-card[data-project="driver"]::before { background: var(--orange); }
+
+.project-card[data-project="doorfuse"]:hover { border-color: rgba(56,189,248,0.3); }
+.project-card[data-project="digitaltwin"]:hover { border-color: rgba(167,139,250,0.3); }
+.project-card[data-project="privacy"]:hover { border-color: rgba(52,211,153,0.3); }
+.project-card[data-project="driver"]:hover { border-color: rgba(251,146,60,0.3); }
+
+.pc-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 1.5px;
+  margin-bottom: 10px;
+}
+.project-card[data-project="doorfuse"] .pc-num { color: var(--cyan); }
+.project-card[data-project="digitaltwin"] .pc-num { color: var(--purple); }
+.project-card[data-project="privacy"] .pc-num { color: var(--green); }
+.project-card[data-project="driver"] .pc-num { color: var(--orange); }
+
+.pc-title {
+  font-family: 'Source Serif 4', serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.pc-sub {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+.pc-venue {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.55rem;
+  margin-top: 12px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  display: inline-block;
+}
+.project-card[data-project="doorfuse"] .pc-venue { background: var(--cyan-dim); color: var(--cyan); }
+.project-card[data-project="digitaltwin"] .pc-venue { background: var(--purple-dim); color: var(--purple); }
+.project-card[data-project="privacy"] .pc-venue { background: var(--green-dim); color: var(--green); }
+.project-card[data-project="driver"] .pc-venue { background: var(--orange-dim); color: var(--orange); }
+
+
+/* ═══════════ SECTIONS ═══════════ */
+.section {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 100px 40px;
+  border-top: 1px solid var(--border);
+}
+
+.section-header {
+  margin-bottom: 50px;
+}
+.section-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.section-title {
+  font-family: 'Source Serif 4', serif;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 700;
+  margin-bottom: 16px;
+  line-height: 1.2;
+}
+.section-desc {
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: var(--text-dim);
+  max-width: 700px;
+}
+
+/* ═══════════ ARCHITECTURE DIAGRAMS (TikZ-inspired) ═══════════ */
+.arch-diagram {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 30px;
+  margin: 30px 0;
+  overflow-x: auto;
+}
+
+.arch-diagram svg {
+  display: block;
+  margin: 0 auto;
+}
+
+/* ═══════════ FEATURE GRID ═══════════ */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 30px 0;
+}
+@media (max-width: 700px) { .feature-grid { grid-template-columns: 1fr; } }
+
+.feature-card {
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.fc-icon {
+  font-size: 1.4rem;
+  margin-bottom: 10px;
+}
+.fc-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.fc-desc {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+/* ═══════════ TIER BLOCKS (Privacy) ═══════════ */
+.tier-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 30px 0;
+}
+.tier-block {
+  padding: 22px 24px;
+  border-radius: 10px;
+  border: 1px solid;
+  position: relative;
+}
+.tier-block .tier-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.tier-block .tier-title {
+  font-family: 'Source Serif 4', serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.tier-block .tier-desc {
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+.tier-block .tier-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.55rem;
+  padding: 2px 8px;
+  border-radius: 3px;
+  display: inline-block;
+  margin-top: 10px;
+}
+
+.tier-1 {
+  border-color: rgba(56,189,248,0.3);
+  background: rgba(56,189,248,0.03);
+}
+.tier-1 .tier-num, .tier-1 .tier-tag { color: var(--cyan); }
+.tier-1 .tier-tag { background: var(--cyan-dim); }
+
+.tier-2 {
+  border-color: rgba(52,211,153,0.3);
+  background: rgba(52,211,153,0.03);
+}
+.tier-2 .tier-num, .tier-2 .tier-tag { color: var(--green); }
+.tier-2 .tier-tag { background: var(--green-dim); }
+
+.tier-3 {
+  border-color: rgba(167,139,250,0.3);
+  background: rgba(167,139,250,0.03);
+}
+.tier-3 .tier-num, .tier-3 .tier-tag { color: var(--purple); }
+.tier-3 .tier-tag { background: var(--purple-dim); }
+
+/* ═══════════ SIGNAL TABLE ═══════════ */
+.signal-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+  font-size: 0.82rem;
+}
+.signal-table th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--cyan);
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 2px solid var(--border);
+  background: var(--surface);
+}
+.signal-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+}
+.signal-table tr:hover td { color: var(--text); background: rgba(56,189,248,0.02); }
+.signal-table .weight-bar {
+  display: inline-block;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--cyan);
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* ═══════════ PLACEHOLDER SECTION ═══════════ */
+.placeholder-box {
+  border: 2px dashed var(--border);
+  border-radius: 14px;
+  padding: 50px 30px;
+  text-align: center;
+  margin: 30px 0;
+}
+.placeholder-box .ph-icon { font-size: 2rem; margin-bottom: 12px; opacity: 0.5; }
+.placeholder-box .ph-text { color: var(--text-mute); font-size: 0.88rem; }
+
+/* ═══════════ PIPELINE FLOW (horizontal) ═══════════ */
+.pipeline-flow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+  padding: 20px 0;
+  margin: 20px 0;
+}
+.pipe-node {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  white-space: nowrap;
+  text-align: center;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  min-width: 80px;
+}
+.pipe-arrow {
+  font-size: 0.8rem;
+  color: var(--text-mute);
+  padding: 0 6px;
+  flex-shrink: 0;
+}
+.pipe-node.highlight-cyan { border-color: rgba(56,189,248,0.4); background: var(--cyan-dim); color: var(--cyan); }
+.pipe-node.highlight-red { border-color: rgba(248,113,113,0.4); background: rgba(248,113,113,0.08); color: var(--red); }
+.pipe-node.highlight-green { border-color: rgba(52,211,153,0.4); background: var(--green-dim); color: var(--green); }
+.pipe-node.destroy { border-color: rgba(248,113,113,0.5); background: rgba(248,113,113,0.08); color: var(--red); font-weight: 700; }
+
+/* ═══════════ BLOCKED BADGE ═══════════ */
+.blocked-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--red);
+  background: rgba(248,113,113,0.08);
+  border: 1px solid rgba(248,113,113,0.3);
+  padding: 6px 14px;
+  border-radius: 6px;
+  margin: 12px 0;
+}
+
+/* ═══════════ FOOTER ═══════════ */
+.footer {
+  text-align: center;
+  padding: 60px 40px;
+  border-top: 1px solid var(--border);
+  color: var(--text-mute);
+  font-size: 0.78rem;
+}
+.footer a { color: var(--cyan); text-decoration: none; }
+
+/* ═══════════ ANIMATIONS ═══════════ */
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+/* Scroll animations */
+.reveal { opacity: 0; transform: translateY(30px); transition: all 0.7s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* Connector arrows between tiers */
+.tier-connector {
+  text-align: center;
+  padding: 4px 0;
+  color: var(--text-mute);
+  font-size: 0.7rem;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════ -->
+<!--                  HERO                  -->
+<!-- ═══════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+
+    <div class="hero-eyebrow"><span>COMPUTER VISION · TRANSIT ANALYTICS · EAST AFRICA</span></div>
+
+    <h1>Vision-Based Passenger Counting<br>for <em>Growing Economies</em></h1>
+
+    <p class="hero-desc">
+      Accurate, privacy-preserving automatic passenger counting on public transit buses 
+      in Nairobi and Kigali. Addressing real-world challenges — severe occlusion, low-quality 
+      dashcam footage, crowded informal boarding, and evolving data protection frameworks — 
+      through multi-modal detection, digital twin projection, and architectural privacy guarantees.
+    </p>
+
+    <div class="challenge-row">
+      <span class="challenge-pill hot">HEAVY OCCLUSION</span>
+      <span class="challenge-pill hot">EXTREME BACKLIGHTING</span>
+      <span class="challenge-pill warn">LOW-RES DASHCAM</span>
+      <span class="challenge-pill warn">CROWDED BOARDING</span>
+      <span class="challenge-pill">INFORMAL TRANSIT</span>
+      <span class="challenge-pill">EDGE DEPLOYMENT</span>
+      <span class="challenge-pill">NO FACE-LEVEL CUES</span>
+    </div>
+
+    <div class="project-grid">
+
+      <div class="project-card" data-project="doorfuse" onclick="scrollTo('sec-doorfuse')">
+        <div class="pc-num">PROJECT 01</div>
+        <div class="pc-title">DOORFUSE</div>
+        <div class="pc-sub">Weighted fusion counter with dual-head detection, ghost injection, and 5-signal scoring</div>
+        <div class="pc-venue">CCOMPLETE</div>
+      </div>
+
+      <div class="project-card" data-project="digitaltwin" onclick="scrollTo('sec-digitaltwin')">
+        <div class="pc-num">PROJECT 02</div>
+        <div class="pc-title">Digital Twin</div>
+        <div class="pc-sub">Homography-projected virtual bus with 3D counting plane at interior pole</div>
+        <div class="pc-venue">IN PROGRESS</div>
+      </div>
+
+      <div class="project-card" data-project="privacy" onclick="scrollTo('sec-privacy')">
+        <div class="pc-num">PROJECT 03</div>
+        <div class="pc-title">Privacy-by-Architecture</div>
+        <div class="pc-sub">Three-tier framework: ephemeral edge, count-only contracts, DPA alignment</div>
+        <div class="pc-venue">IN PROGRESS</div>
+      </div>
+
+      <div class="project-card" data-project="driver" onclick="scrollTo('sec-driver')">
+        <div class="pc-num">PROJECT 04</div>
+        <div class="pc-title">Driver Behaviour</div>
+        <div class="pc-sub">Anomaly detection in driving patterns using AnomalyClip on dashcam footage</div>
+        <div class="pc-venue">IN PROGRESS</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════ -->
+<!--          01 — DOORFUSE                 -->
+<!-- ═══════════════════════════════════════ -->
+<section class="section reveal" id="sec-doorfuse">
+  <div class="section-header">
+    <div class="section-eyebrow" style="color:var(--cyan)">PROJECT 01 — CORE SYSTEM</div>
+    <h2 class="section-title">DOORFUSE: Weighted Fusion<br>Passenger Counter</h2>
+    <p class="section-desc">
+      A dual-head detection architecture that fuses body tracking, pose estimation, 
+      head detection, and ReID embeddings through a 5-signal weighted scoring system. 
+      Designed for the extreme conditions of East African public transit — single-door 
+      Nairobi matatus and dual-door Kigali buses.
+    </p>
+  </div>
+
+  <!-- Pipeline flow -->
+  <div class="pipeline-flow">
+    <div class="pipe-node">Camera<br><span style="font-size:0.5rem;color:var(--text-mute)">Side-mount</span></div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-node highlight-cyan">YOLO<br>Detect</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-node highlight-red">ReID<br>Embed</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-node">Pose<br>Estimate</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-node">Head<br>Detect</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-node highlight-cyan">BoTSORT<br>Track</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-node highlight-green">5-Signal<br>Score</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-node highlight-green">Count</div>
+  </div>
+
+  <!-- 5 Signal Scoring Weights -->
+  <h3 style="font-family:'JetBrains Mono',monospace; font-size:0.72rem; letter-spacing:1px; color:var(--cyan); margin:30px 0 14px;">WEIGHTED SCORING SIGNALS</h3>
+
+  <table class="signal-table">
+    <thead>
+      <tr><th>Signal</th><th>Weight</th><th>Source</th><th>Role</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="color:var(--text)">Trajectory</td>
+        <td><span class="weight-bar" style="width:90px"></span>0.30</td>
+        <td>Track history</td>
+        <td>Primary — crossing direction over time</td>
+      </tr>
+      <tr>
+        <td style="color:var(--text)">Orientation</td>
+        <td><span class="weight-bar" style="width:75px"></span>0.25</td>
+        <td>Pose keypoints</td>
+        <td>Shoulder geometry → front/back/side</td>
+      </tr>
+      <tr>
+        <td style="color:var(--text)">Biometric</td>
+        <td><span class="weight-bar" style="width:60px"></span>0.20</td>
+        <td>Head detector</td>
+        <td>Anchor for occluded bodies</td>
+      </tr>
+      <tr>
+        <td style="color:var(--text)">Motion</td>
+        <td><span class="weight-bar" style="width:45px"></span>0.15</td>
+        <td>Velocity vector</td>
+        <td>Instantaneous movement confirmation</td>
+      </tr>
+      <tr>
+        <td style="color:var(--text)">Consistency</td>
+        <td><span class="weight-bar" style="width:30px"></span>0.10</td>
+        <td>Path analysis</td>
+        <td>Penalises oscillation / rewards smooth paths</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Sub-systems -->
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="fc-icon">👻</div>
+      <div class="fc-title">GHOST INJECTION</div>
+      <div class="fc-desc">Hungarian algorithm matches orphaned head detections to lost tracks. Adaptive body/head ratios learned via EMA per-track.</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">🛡️</div>
+      <div class="fc-title">STAFF FILTER</div>
+      <div class="fc-desc">Multi-signal detection: shoulder orientation ratio, position anchoring, pacing behaviour, and round-trip crossing patterns.</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">🚨</div>
+      <div class="fc-title">TOUT DETECTION</div>
+      <div class="fc-desc">Fare-collector identification via re-entry count, engagement proximity, activity ratio, and long-stay thresholds.</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">⚡</div>
+      <div class="fc-title">TELEPORT GUARD</div>
+      <div class="fc-desc">Motion predictor flags physically impossible jumps. ID repair manager freezes and validates suspect tracks.</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">🚪</div>
+      <div class="fc-title">DOOR STATE</div>
+      <div class="fc-desc">YOLO-based door detection with hysteresis smoothing and crossing grace period for mid-transition events.</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">🌍</div>
+      <div class="fc-title">MULTI-CITY</div>
+      <div class="fc-desc">Country-specific configs for Kenya (single-door, left-boarding) and Rwanda (dual-camera, up-boarding) deployments.</div>
+    </div>
+  </div>
+    <p style="font-size:0.88rem; color:var(--text-dim); line-height:1.7; margin-top:20px;">
+    More details about the project and its performance can be found in the
+     <a href="door_fuse.html" style="color:var(--cyan); text-decoration:none; border-bottom:1px dashed var(--cyan);">DoorFuse Project Page</a>.
+    
+  </p>
+</section>
+
+
+<!-- ═══════════════════════════════════════ -->
+<!--        02 — DIGITAL TWIN              -->
+<!-- ═══════════════════════════════════════ -->
+<section class="section reveal" id="sec-digitaltwin">
+  <div class="section-header">
+    <div class="section-eyebrow" style="color:var(--purple)">PROJECT 02 — SPATIAL REASONING</div>
+    <h2 class="section-title">Digital Twin Pipeline</h2>
+    <p class="section-desc">
+      Addresses the fundamental parallax problem: a high-angle camera makes heads appear 
+      "inside" while bodies are still at the door. By projecting detections into a 
+      geometrically accurate virtual bus and counting at an interior 3D plane, we eliminate 
+      perspective-induced false positives.
+    </p>
+  </div>
+
+  <!-- 5-stage pipeline diagram (TikZ-inspired SVG) -->
+  <div class="arch-diagram">
+    <svg viewBox="0 0 800 260" width="100%" style="max-width:800px">
+      <defs>
+        <marker id="arrowPurple" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#a78bfa"/>
+        </marker>
+      </defs>
+
+      <!-- Stage boxes -->
+      <g>
+        <!-- 1: Detect -->
+        <rect x="10" y="30" width="120" height="70" rx="6" fill="rgba(56,189,248,0.06)" stroke="#38bdf8" stroke-width="1.2"/>
+        <text x="70" y="55" fill="#38bdf8" font-family="JetBrains Mono" font-size="8" text-anchor="middle" font-weight="600">DETECT</text>
+        <text x="70" y="70" fill="#8090aa" font-family="JetBrains Mono" font-size="6.5" text-anchor="middle">YOLO + Head</text>
+        <text x="70" y="82" fill="#8090aa" font-family="JetBrains Mono" font-size="6.5" text-anchor="middle">4/5 found</text>
+
+        <!-- Arrow -->
+        <line x1="135" y1="65" x2="165" y2="65" stroke="#a78bfa" stroke-width="1.2" marker-end="url(#arrowPurple)"/>
+
+        <!-- 2: Heatmap -->
+        <rect x="170" y="30" width="120" height="70" rx="6" fill="rgba(248,113,113,0.06)" stroke="#f87171" stroke-width="1.2"/>
+        <text x="230" y="55" fill="#f87171" font-family="JetBrains Mono" font-size="8" text-anchor="middle" font-weight="600">HEATMAP</text>
+        <text x="230" y="70" fill="#8090aa" font-family="JetBrains Mono" font-size="6.5" text-anchor="middle">Density peaks</text>
+        <text x="230" y="82" fill="#34d399" font-family="JetBrains Mono" font-size="6.5" text-anchor="middle">5/5 recovered</text>
+
+        <!-- Arrow -->
+        <line x1="295" y1="65" x2="325" y2="65" stroke="#a78bfa" stroke-width="1.2" marker-end="url(#arrowPurple)"/>
+
+        <!-- 3: Homography -->
+        <rect x="330" y="30" width="120" height="70" rx="6" fill="rgba(167,139,250,0.06)" stroke="#a78bfa" stroke-width="1.2"/>
+        <text x="390" y="55" fill="#a78bfa" font-family="JetBrains Mono" font-size="8" text-anchor="middle" font-weight="600">HOMOGRAPHY</text>
+        <text x="390" y="70" fill="#8090aa" font-family="JetBrains Mono" font-size="6.5" text-anchor="middle">Side → Top-down</text>
+        <text x="390" y="82" fill="#8090aa" font-family="JetBrains Mono" font-size="6.5" text-anchor="middle">2.55m × 1.2m door</text>
+
+        <!-- Arrow -->
+        <line x1="455" y1="65" x2="485" y2="65" stroke="#a78bfa" stroke-width="1.2" marker-end="url(#arrowPurple)"/>
+
+        <!-- 4: 3D Plane -->
+        <rect x="490" y="30" width="120" height="70" rx="6" fill="rgba(56,189,248,0.08)" stroke="#38bdf8" stroke-width="1.5"/>
+        <text x="550" y="55" fill="#38bdf8" font-family="JetBrains Mono" font-size="8" text-anchor="middle" font-weight="600">3D PLANE</text>
+        <text x="550" y="70" fill="#8090aa" font-family="JetBrains Mono" font-size="6.5" text-anchor="middle">@ Interior pole</text>
+        <text x="550" y="82" fill="#fbbf24" font-family="JetBrains Mono" font-size="6.5" text-anchor="middle">STOP knob anchor</text>
+
+        <!-- Arrow -->
+        <line x1="615" y1="65" x2="645" y2="65" stroke="#a78bfa" stroke-width="1.2" marker-end="url(#arrowPurple)"/>
+
+        <!-- 5: Count -->
+        <rect x="650" y="30" width="120" height="70" rx="6" fill="rgba(52,211,153,0.08)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="710" y="55" fill="#34d399" font-family="JetBrains Mono" font-size="8" text-anchor="middle" font-weight="600">BoTSORT</text>
+        <text x="710" y="70" fill="#34d399" font-family="JetBrains Mono" font-size="6.5" text-anchor="middle">Vector crossing</text>
+        <text x="710" y="85" fill="#34d399" font-family="JetBrains Mono" font-size="9" text-anchor="middle" font-weight="700">IN: +5</text>
+      </g>
+
+      <!-- Key insight callout -->
+      <rect x="440" y="130" width="340" height="55" rx="6" fill="rgba(56,189,248,0.04)" stroke="rgba(56,189,248,0.2)" stroke-width="1" stroke-dasharray="4 3"/>
+      <text x="460" y="150" fill="#38bdf8" font-family="JetBrains Mono" font-size="7" font-weight="600">KEY INSIGHT</text>
+      <text x="460" y="165" fill="#8090aa" font-family="Overpass" font-size="7.5">Counting plane positioned at interior pole (NOT door</text>
+      <text x="460" y="177" fill="#8090aa" font-family="Overpass" font-size="7.5">threshold) eliminates parallax-induced false positives.</text>
+
+      <!-- Parallax illustration -->
+      <g transform="translate(60,130)">
+        <rect x="0" y="0" width="310" height="100" rx="6" fill="rgba(248,113,113,0.03)" stroke="rgba(248,113,113,0.15)" stroke-width="1"/>
+        <text x="10" y="18" fill="#f87171" font-family="JetBrains Mono" font-size="6.5" font-weight="600">THE PARALLAX PROBLEM</text>
+
+        <!-- Mini bus cross-section -->
+        <rect x="20" y="30" width="270" height="55" rx="4" fill="none" stroke="#253050" stroke-width="0.8"/>
+        <text x="30" y="42" fill="#4a5670" font-family="JetBrains Mono" font-size="5">INSIDE</text>
+        <text x="250" y="42" fill="#4a5670" font-family="JetBrains Mono" font-size="5">DOOR</text>
+
+        <!-- Door -->
+        <rect x="260" y="40" width="4" height="35" fill="rgba(251,191,36,0.4)" rx="1"/>
+
+        <!-- Wrong line (at door) -->
+        <line x1="250" y1="30" x2="250" y2="85" stroke="#f87171" stroke-width="1.2" stroke-dasharray="3 2"/>
+        <text x="250" y="96" fill="#f87171" font-family="JetBrains Mono" font-size="5" text-anchor="middle">✗ WRONG</text>
+
+        <!-- Correct line (at pole) -->
+        <line x1="130" y1="30" x2="130" y2="85" stroke="#38bdf8" stroke-width="1.5"/>
+        <text x="130" y="96" fill="#38bdf8" font-family="JetBrains Mono" font-size="5" text-anchor="middle">✓ CORRECT</text>
+
+        <!-- Pole -->
+        <line x1="130" y1="30" x2="130" y2="85" stroke="#a78bfa" stroke-width="2.5" opacity="0.3"/>
+        <circle cx="130" cy="50" r="3" fill="#a78bfa"/>
+
+        <!-- Person silhouette (head inside, body at door) -->
+        <circle cx="210" cy="48" r="6" fill="rgba(248,113,113,0.3)" stroke="#f87171" stroke-width="0.8"/>
+        <ellipse cx="230" cy="65" rx="10" ry="14" fill="rgba(248,113,113,0.2)" stroke="#f87171" stroke-width="0.8"/>
+        <text x="210" y="40" fill="#f87171" font-family="JetBrains Mono" font-size="5">Head appears inside!</text>
+      </g>
+    </svg>
+  </div>
+
+  <p style="font-size:0.88rem; color:var(--text-dim); line-height:1.7; margin-top:20px;">
+    The interactive pipeline walkthrough and annotated camera frames are available in the 
+    <a href="digital_twin.html" style="color:var(--purple); text-decoration:none; border-bottom:1px dashed var(--purple);">Digital Twin Flow visualisation</a> — 
+    showing the system in action on live Nairobi bus footage.
+  </p>
+</section>
+
+
+<!-- ═══════════════════════════════════════ -->
+<!--       03 — PRIVACY-BY-ARCHITECTURE    -->
+<!-- ═══════════════════════════════════════ -->
+<section class="section reveal" id="sec-privacy">
+  <div class="section-header">
+    <div class="section-eyebrow" style="color:var(--green)">PROJECT 03 — PRIVACY FRAMEWORK</div>
+    <h2 class="section-title">Privacy-by-Architecture for<br>Passenger Counting</h2>
+    <p class="section-desc">
+      Modern APC pipelines are <em>de facto</em> soft biometric systems — ReID embeddings, 
+      pose keypoints, and appearance descriptors encode identity-bearing information. We 
+      formalise the <strong>ReID–anonymisation paradox</strong> and propose a three-tier framework 
+      that enforces privacy as an architectural constraint rather than a post-hoc filter.
+    </p>
+  </div>
+
+  <!-- Threat model -->
+  <h3 style="font-family:'JetBrains Mono',monospace; font-size:0.72rem; letter-spacing:1px; color:var(--red); margin-bottom:14px;">THREAT VECTORS</h3>
+  <div class="feature-grid" style="grid-template-columns: repeat(4,1fr); margin-bottom:40px;">
+    <div class="feature-card" style="border-color:rgba(248,113,113,0.2)">
+      <div class="fc-title" style="color:var(--red)">A1: EMBEDDING</div>
+      <div class="fc-desc">ReID vectors persist in buffers, caches, and debug logs beyond counting need</div>
+    </div>
+    <div class="feature-card" style="border-color:rgba(248,113,113,0.2)">
+      <div class="fc-title" style="color:var(--red)">A2: FABRICATION</div>
+      <div class="fc-desc">Ghost injection creates biometric records for people who don't exist</div>
+    </div>
+    <div class="feature-card" style="border-color:rgba(248,113,113,0.2)">
+      <div class="fc-title" style="color:var(--red)">A3: METADATA</div>
+      <div class="fc-desc">Stop-level counts + mobile money traces enable trajectory re-identification</div>
+    </div>
+    <div class="feature-card" style="border-color:rgba(251,146,60,0.2)">
+      <div class="fc-title" style="color:var(--orange)">A4: FACTORY CCTV</div>
+      <div class="fc-desc">OEM data access on electric buses; ambiguous cross-border flows to foreign vendors</div>
+    </div>
+  </div>
+
+  <!-- Three-tier framework -->
+  <h3 style="font-family:'JetBrains Mono',monospace; font-size:0.72rem; letter-spacing:1px; color:var(--green); margin-bottom:14px;">THREE-TIER FRAMEWORK</h3>
+
+  <div class="tier-stack">
+    <div class="tier-block tier-1">
+      <div class="tier-num">TIER 1</div>
+      <div class="tier-title">Ephemeral Edge Processing</div>
+      <div class="tier-desc" style="color:var(--text-dim)">
+        Biometric-adjacent representations (ReID embeddings, pose sequences) never leave the edge 
+        device. Hard TTL enforced from track initiation — embeddings destroyed after counting 
+        decision, not retained for the route. Cryptographic erasure when secure wiping is infeasible.
+      </div>
+      <div class="tier-tag">DPA-K Sec. 25(d),(g) · Sec. 39 · Sec. 41–42</div>
+    </div>
+
+    <div class="tier-connector">▼</div>
+
+    <div class="tier-block tier-2">
+      <div class="tier-num">TIER 2</div>
+      <div class="tier-title">Count-Only Output Contract</div>
+      <div class="tier-desc" style="color:var(--text-dim)">
+        API restricted to the minimal tuple: <code style="font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:var(--green); background:var(--green-dim); padding:2px 6px; border-radius:3px;">{timestamp, stop_id, direction, count}</code>. 
+        No embeddings, bounding boxes, or track IDs cross the boundary. Laplacian noise added for low-n stops.
+      </div>
+      <div class="blocked-badge">✕ BLOCKED: No embeddings · No bboxes · No track IDs</div>
+      <div class="tier-tag">DPA-K Sec. 25(b)–(d),(h) · Sec. 48 · Sec. 49(1)</div>
+    </div>
+
+    <div class="tier-connector">▼</div>
+
+    <div class="tier-block tier-3">
+      <div class="tier-num">TIER 3</div>
+      <div class="tier-title">Regulatory Alignment</div>
+      <div class="tier-desc" style="color:var(--text-dim)">
+        Each technical control mapped to specific DPA provisions (Kenya Act No. 24/2019, Rwanda Law No. 058/2021). 
+        DPIA conducted. Breach protocol established. No cross-border transfer of biometric-adjacent data. 
+        Precedent: <em>Katiba Institute v. Worldcoin</em> — absence of DPIA independently invalidates biometric processing.
+      </div>
+      <div class="tier-tag">DPA-K Sec. 31 · Sec. 43 · Sec. 24(1)(b)</div>
+    </div>
+  </div>
+
+  <!-- Pipeline with TTL markers -->
+  <h3 style="font-family:'JetBrains Mono',monospace; font-size:0.72rem; letter-spacing:1px; color:var(--green); margin:30px 0 14px;">PIPELINE DATA FLOW</h3>
+  <div class="pipeline-flow">
+    <div class="pipe-node">Camera</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-node">YOLO<br>Detect</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-node highlight-red">ReID<br>Embed</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-node highlight-red">Pose<br>Estimate</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-node">Track &<br>Count</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-node highlight-green">Count<br>only</div>
+  </div>
+  <div style="display:flex; gap:30px; margin-top:-6px; padding-left:10px;">
+    <div></div>
+    <div></div>
+    <div style="text-align:center;">
+      <div style="font-family:'JetBrains Mono',monospace; font-size:0.55rem; color:var(--red); background:rgba(248,113,113,0.08); padding:3px 8px; border-radius:3px; display:inline-block;">✕ TTL expiry — embeddings destroyed</div>
+    </div>
+    <div></div>
+    <div style="text-align:center;">
+      <div style="font-family:'JetBrains Mono',monospace; font-size:0.55rem; color:var(--red); background:rgba(248,113,113,0.08); padding:3px 8px; border-radius:3px; display:inline-block;">✕ TTL expiry — keypoints destroyed</div>
+    </div>
+  </div>
+
+    <p style="font-size:0.88rem; color:var(--text-dim); line-height:1.7; margin-top:20px;">
+    More details coming soon — the privacy framework is currently being formalised and implemented. The final architecture and compliance report will be published here. 
+    The opinion paper <a href="PrivacybyDesign_v1.pdf" style="color:var(--green); text-decoration:none; border-bottom:1px dashed var(--green);">Privacy-by-Architecture: Enforcing Data Protection in Computer Vision Systems</a>
+     provides an early overview of the core concepts and motivations.
+  </p>
+</section>
+
+
+<!-- ═══════════════════════════════════════ -->
+<!--        04 — DRIVER BEHAVIOUR           -->
+<!-- ═══════════════════════════════════════ -->
+<section class="section reveal" id="sec-driver">
+  <div class="section-header">
+    <div class="section-eyebrow" style="color:var(--orange)">PROJECT 04 — DRIVER ANALYTICS</div>
+    <h2 class="section-title">Driver Behaviour Analysis<br>via AnomalyClip</h2>
+    <p class="section-desc">
+      Extending transit analytics beyond passenger counting to driver behaviour monitoring. 
+      Using dashcam footage and vision-language models to detect anomalous driving patterns — 
+      harsh braking, erratic lane changes, distracted driving — without requiring labelled training data.
+    </p>
+  </div>
+
+  <div class="placeholder-box">
+    <div class="ph-icon">🚧</div>
+    <div class="ph-text">
+      This project is under active development.<br>
+      Architecture details, evaluation metrics, and deployment strategy will be added here.
+    </div>
+    <div style="margin-top:20px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+      <span class="challenge-pill">AnomalyClip</span>
+      <span class="challenge-pill">DASHCAM</span>
+      <span class="challenge-pill">ZERO-SHOT</span>
+      <span class="challenge-pill">VISION-LANGUAGE</span>
+      <span class="challenge-pill warn">REAL-TIME EDGE</span>
+    </div>
+  </div>
+
+  <div class="feature-grid" style="grid-template-columns: repeat(3,1fr);">
+    <div class="feature-card">
+      <div class="fc-icon">🎥</div>
+      <div class="fc-title">DASHCAM INPUT</div>
+      <div class="fc-desc">Leverages the same onboard camera infrastructure used for passenger counting — no additional hardware needed.</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">🧠</div>
+      <div class="fc-title">ANOMALYCLIP</div>
+      <div class="fc-desc">Vision-language anomaly detection using text prompts. Zero-shot transfer to new anomaly types without retraining.</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">📊</div>
+      <div class="fc-title">SAFETY SCORING</div>
+      <div class="fc-desc">Per-trip driver safety scores integrated with fleet management dashboards for route operators.</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════ -->
+<!--              FOOTER                     -->
+<!-- ═══════════════════════════════════════ -->
+<footer class="footer">
+  <p style="margin-bottom:8px;">Vision-Based Transit Analytics Research</p>
+  <p>Nairobi · Kigali · 2024–2026</p>
+</footer>
+
+
+<script>
+// Smooth scroll
+function scrollTo(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) e.target.classList.add('visible');
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
