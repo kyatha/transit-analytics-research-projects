@@ -6,33 +6,44 @@
 <title>Cooling Load Analysis — Grid Resilience</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-:root { --bg: #06090f; --surface: #0d1320; --border: #1a2640; --text: #e4eaf2; --accent: #fb923c; }
-/* ... (Style rules matching index.html for consistency) ... */
+:root { --bg: #06090f; --surface: #0d1320; --border: #1a2640; --text: #e4eaf2; --text-dim: #7a8da8; --accent: #fb923c; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; line-height: 1.75; overflow-x: hidden; }
+.stage-nav { position: sticky; top: 0; z-index: 100; display: flex; justify-content: center; gap: 8px; padding: 14px; background: rgba(6, 9, 15, 0.8); backdrop-filter: blur(14px); }
+.stage-btn { font-family: 'JetBrains Mono'; font-size: 0.65rem; padding: 8px 16px; border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); border-radius: 6px; cursor: pointer; text-transform: uppercase; }
+.stage-btn.active { border-color: var(--accent); color: var(--accent); }
+.container { max-width: 820px; margin: 0 auto; padding: 0 28px; }
+.section-anchor { scroll-margin-top: 80px; height: 2px; display: block; visibility: hidden; }
+.hero { min-height: 80vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 60px 28px; }
+.hero h1 { font-family: 'JetBrains Mono'; font-size: clamp(2rem, 6vw, 3.5rem); font-weight: 700; color: var(--accent); margin-bottom: 20px; }
+.hero-tagline { font-size: 1.2rem; color: var(--text-dim); max-width: 600px; }
+.section-break { padding: 80px 0 40px; }
+.section-label { font-family: 'JetBrains Mono'; font-weight: 700; color: var(--accent); margin-bottom: 20px; }
+.equation-strip { background: var(--surface); border: 1px solid var(--border); padding: 30px; border-radius: 12px; text-align: center; font-family: 'JetBrains Mono'; color: var(--text); margin: 30px 0; }
 </style>
 </head>
 <body>
 <nav class="stage-nav">
-  <button class="stage-btn" onclick="window.location.href='index.html'">00 PROJECTS HOME</button>
+  <button class="stage-btn" onclick="window.location.href='index.html'">00 HOME</button>
   <button class="stage-btn active" onclick="goToSection('modeling')">01 MODELING</button>
   <button class="stage-btn" onclick="goToSection('simulation')">02 SIMULATION</button>
 </nav>
 <div class="section-anchor" id="modeling"></div>
 <section class="hero">
-  <div class="badge">ONGOING RESEARCH</div>
   <h1>Cooling Load Impact</h1>
-  <p class="hero-tagline">Forecasting Electricity Demand and Grid Strain in Warming Urban Environments.</p>
+  <p class="hero-tagline">Forecasting electricity demand and grid strain in warming urban environments.</p>
 </section>
 <div class="container">
-  <div class="section-anchor" id="modeling"></div>
   <section class="section-break">
-    <h2 class="section-label" style="color: var(--accent);">01 — Archetype Modeling</h2>
-    <p>Using Microsoft building footprints and electricity-spend analytics to create residential archetypes and forecast cooling adoption.</p>
+    <h2 class="section-label">01 — Archetype Modeling</h2>
+    <p style="color: var(--text-dim);">Mapped Microsoft building footprints to residential archetypes (materials and insulation) and used analytics to forecast cooling adoption and load profiles.</p>
   </section>
   <div class="section-anchor" id="simulation"></div>
   <section class="section-break">
-    <h2 class="section-label" style="color: var(--accent);">02 — Simulation Pipeline</h2>
-    <div class="equation-strip"><div class="equation">SketchUp → EnergyPlus → JEPlus → Grid Analysis</div></div>
-    <p>Translating parametric cooling loads into transformer strain estimates under WHO comfort targets to guide grid-resilience planning.</p>
+    <h2 class="section-label">02 — Simulation Pipeline</h2>
+    <div class="equation-strip">SketchUp → EnergyPlus → JEPlus → Grid Analysis</div>
+    <p style="color: var(--text-dim);">Large-scale parametric simulations translate thermal loads into transformer-level strain estimates to guide grid-resilience planning under WHO comfort targets.</p>
   </section>
 </div>
 <script>
