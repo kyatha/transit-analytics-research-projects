@@ -3,72 +3,1149 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OpenAQ-Transit — IoT Particle Monitoring</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<title>OpenAQ-Transit — Curb-to-Cabin PM Monitoring for Sub-Saharan Africa</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #06090f; --surface: #0d1320; --border: #1a2640; --text: #e4eaf2; --text-dim: #7a8da8;
-  --accent: #34d399; --accent-glow: rgba(52, 211, 153, 0.08);
+  --bg: #050810;
+  --surface: #0a0f1a;
+  --surface-raised: #0f1525;
+  --border: #1a2540;
+  --border-bright: #2a3a60;
+  --text: #e8edf5;
+  --text-muted: #8899b3;
+  --accent: #34d399;
+  --accent-dim: #1a6b4d;
+  --accent-glow: rgba(52, 211, 153, 0.15);
+  --warning: #f59e0b;
+  --danger: #ef4444;
 }
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
+
 html { scroll-behavior: smooth; }
-body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; line-height: 1.75; overflow-x: hidden; }
-.stage-nav { position: sticky; top: 0; z-index: 100; display: flex; justify-content: center; gap: 8px; padding: 14px; background: rgba(6, 9, 15, 0.8); backdrop-filter: blur(14px); }
-.stage-btn { font-family: 'JetBrains Mono'; font-size: 0.65rem; padding: 8px 16px; border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); border-radius: 6px; cursor: pointer; text-transform: uppercase; }
-.stage-btn.active { border-color: var(--accent); color: var(--accent); }
-.container { max-width: 820px; margin: 0 auto; padding: 0 28px; }
-.section-anchor { scroll-margin-top: 80px; height: 2px; display: block; visibility: hidden; }
-.hero { min-height: 80vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 60px 28px; }
-.hero h1 { font-family: 'JetBrains Mono'; font-size: clamp(2.5rem, 7vw, 4rem); font-weight: 700; color: var(--accent); margin-bottom: 20px; }
-.hero-tagline { font-size: 1.2rem; color: var(--text-dim); max-width: 600px; margin-bottom: 40px; }
-.hero-number { display: flex; align-items: baseline; gap: 15px; }
-.hero-number .big { font-family: 'JetBrains Mono'; font-size: 4.5rem; color: var(--accent); }
-.section-break { padding: 80px 0 40px; }
-.section-label { font-family: 'JetBrains Mono'; font-weight: 700; color: var(--accent); margin-bottom: 20px; }
-ul { list-style-type: square; color: var(--text-dim); padding-left: 20px; }
-li { margin-bottom: 15px; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+/* Ambient particle animation in hero */
+.particle-field {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--accent);
+  border-radius: 50%;
+  opacity: 0;
+  animation: float-particle 8s infinite;
+}
+
+@keyframes float-particle {
+  0%, 100% { opacity: 0; transform: translateY(100vh) scale(0.5); }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.6; }
+  100% { opacity: 0; transform: translateY(-20vh) scale(1); }
+}
+
+/* Navigation */
+.stage-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  gap: 0;
+  background: rgba(5, 8, 16, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.stage-btn {
+  flex: 1;
+  min-width: 140px;
+  padding: 1rem 1.25rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.stage-btn:last-child { border-right: none; }
+.stage-btn:hover { background: var(--surface); color: var(--text); }
+.stage-btn.active { background: var(--accent-glow); color: var(--accent); }
+
+/* Hero Section */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 8rem 2rem 4rem;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 150%;
+  height: 60%;
+  background: radial-gradient(ellipse at center top, var(--accent-glow), transparent 70%);
+  pointer-events: none;
+}
+
+.hero-content {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  background: var(--accent-glow);
+  border: 1px solid var(--accent-dim);
+  border-radius: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.hero h1 {
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-bottom: 1rem;
+}
+
+.hero h1 span {
+  display: block;
+  background: linear-gradient(135deg, var(--accent), #60a5fa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-tagline {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  max-width: 600px;
+  margin-bottom: 3rem;
+}
+
+/* Hero Stats Grid */
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  max-width: 700px;
+}
+
+.stat-cell {
+  background: var(--surface);
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.stat-value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.stat-value.warning { color: var(--warning); }
+.stat-value.danger { color: var(--danger); }
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  letter-spacing: 0.02em;
+}
+
+/* Section Container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.section {
+  padding: 6rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.section-header {
+  margin-bottom: 3rem;
+}
+
+.section-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  color: var(--accent);
+  margin-bottom: 1rem;
+}
+
+.section-title {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
+}
+
+.section-desc {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  max-width: 700px;
+}
+
+/* Problem Statement with Impact Numbers */
+.impact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 3rem;
+}
+
+.impact-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.impact-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--danger), var(--warning));
+}
+
+.impact-number {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 3rem;
+  font-weight: 600;
+  color: var(--danger);
+  line-height: 1;
+}
+
+.impact-unit {
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin-left: 0.25rem;
+}
+
+.impact-context {
+  margin-top: 0.75rem;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.impact-source {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 1rem;
+  opacity: 0.7;
+}
+
+/* Architecture Diagram */
+.architecture-container {
+  margin-top: 3rem;
+}
+
+.arch-diagram {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2.5rem;
+  position: relative;
+}
+
+.arch-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.arch-row:last-child { margin-bottom: 0; }
+
+.arch-node {
+  flex: 1;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.arch-node:hover {
+  border-color: var(--accent-dim);
+  box-shadow: 0 0 30px var(--accent-glow);
+}
+
+.arch-node.highlight {
+  border-color: var(--accent);
+  background: linear-gradient(135deg, var(--surface-raised), rgba(52, 211, 153, 0.05));
+}
+
+.arch-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-glow);
+  border: 1px solid var(--accent-dim);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.arch-title {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.arch-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.arch-specs {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.spec-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.spec-item::before {
+  content: '→';
+  color: var(--accent);
+}
+
+.arch-connector {
+  flex: 0 0 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.connector-line {
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--border), var(--accent), var(--border));
+  position: relative;
+}
+
+.connector-line::after {
+  content: '⟶';
+  position: absolute;
+  right: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--accent);
+  font-size: 1rem;
+}
+
+/* Modes Comparison */
+.modes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-top: 3rem;
+}
+
+.mode-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.mode-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.mode-icon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 1.75rem;
+}
+
+.mode-icon.solar {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(251, 191, 36, 0.05));
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.mode-icon.bus {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.2), rgba(96, 165, 250, 0.05));
+  border: 1px solid rgba(96, 165, 250, 0.3);
+}
+
+.mode-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.mode-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.mode-body {
+  padding: 1.5rem;
+}
+
+.mode-specs {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.mode-spec {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background: var(--surface-raised);
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.mode-spec-label { color: var(--text-muted); }
+.mode-spec-value { 
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+/* Results Section */
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 3rem;
+}
+
+.result-cell {
+  background: var(--surface);
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+}
+
+.result-cell::before {
+  content: attr(data-label);
+  position: absolute;
+  top: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.result-value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: var(--accent);
+  line-height: 1;
+  margin-top: 1rem;
+}
+
+.result-context {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0.75rem;
+}
+
+/* Timeline */
+.timeline {
+  margin-top: 3rem;
+  position: relative;
+  padding-left: 2rem;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--accent), var(--border));
+}
+
+.timeline-item {
+  position: relative;
+  padding: 1.5rem;
+  padding-left: 2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -2.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  background: var(--accent);
+  border-radius: 50%;
+  border: 3px solid var(--bg);
+}
+
+.timeline-item.upcoming::before {
+  background: var(--surface);
+  border: 3px solid var(--accent);
+}
+
+.timeline-date {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--accent);
+  margin-bottom: 0.5rem;
+}
+
+.timeline-title {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.timeline-desc {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* Resources Section */
+.resources-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.resource-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--text);
+  transition: all 0.3s ease;
+}
+
+.resource-link:hover {
+  border-color: var(--accent-dim);
+  background: var(--surface-raised);
+}
+
+.resource-link.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.resource-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 1.25rem;
+}
+
+.resource-title {
+  font-weight: 500;
+  margin-bottom: 0.15rem;
+}
+
+.resource-meta {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* Citation Box */
+.citation-box {
+  margin-top: 3rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.citation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--border);
+}
+
+.citation-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.copy-btn {
+  padding: 0.4rem 0.8rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  background: var(--accent-glow);
+  border: 1px solid var(--accent-dim);
+  border-radius: 4px;
+  color: var(--accent);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.copy-btn:hover {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.citation-content {
+  padding: 1.5rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
+  line-height: 1.8;
+  color: var(--text-muted);
+}
+
+/* Footer */
+.page-footer {
+  padding: 3rem 2rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.footer-text {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.footer-text a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero { padding: 6rem 1.5rem 3rem; }
+  .container { padding: 0 1.5rem; }
+  .section { padding: 4rem 0; }
+  .arch-row { flex-direction: column; }
+  .arch-connector { 
+    height: 40px; 
+    width: 2px;
+    margin: 0 auto;
+  }
+  .connector-line {
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--border), var(--accent), var(--border));
+  }
+  .connector-line::after {
+    content: '↓';
+    right: 50%;
+    top: auto;
+    bottom: -12px;
+    transform: translateX(50%);
+  }
+}
 </style>
 </head>
 <body>
+
+<!-- Navigation -->
 <nav class="stage-nav">
-  <button class="stage-btn" onclick="window.location.href='index.html'">00 HOME</button>
-  <button class="stage-btn active" onclick="goToSection('overview')">01 OVERVIEW</button>
-  <button class="stage-btn" onclick="goToSection('hardware')">02 HARDWARE</button>
-  <button class="stage-btn" onclick="goToSection('deployment')">03 DEPLOYMENT</button>
+  <button class="stage-btn" onclick="window.location.href='index.html'">← PROJECTS</button>
+  <button class="stage-btn active" onclick="goToSection('overview')">OVERVIEW</button>
+  <button class="stage-btn" onclick="goToSection('problem')">THE PROBLEM</button>
+  <button class="stage-btn" onclick="goToSection('architecture')">ARCHITECTURE</button>
+  <button class="stage-btn" onclick="goToSection('results')">RESULTS</button>
+  <button class="stage-btn" onclick="goToSection('resources')">RESOURCES</button>
 </nav>
-<div class="section-anchor" id="overview"></div>
-<section class="hero">
-  <h1>OpenAQ-Transit</h1>
-  <p class="hero-tagline">The first unified curb-to-cabin air-quality monitoring network in sub-Saharan Africa.</p>
-  <div class="hero-number"><span class="big">55</span><span style="text-align:left; font-size:0.9rem; color:var(--text-dim);">production units<br><strong>deployed in Nairobi & Kigali</strong></span></div>
+
+<!-- Hero Section -->
+<section class="hero" id="overview">
+  <div class="particle-field">
+    <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
+    <div class="particle" style="left: 20%; animation-delay: 1.2s;"></div>
+    <div class="particle" style="left: 35%; animation-delay: 2.4s;"></div>
+    <div class="particle" style="left: 50%; animation-delay: 0.8s;"></div>
+    <div class="particle" style="left: 65%; animation-delay: 3.2s;"></div>
+    <div class="particle" style="left: 80%; animation-delay: 1.6s;"></div>
+    <div class="particle" style="left: 90%; animation-delay: 4s;"></div>
+  </div>
+  
+  <div class="hero-content">
+    <div class="badge">OPEN SOURCE HARDWARE • BUILDSYS 2026</div>
+    
+    <h1>
+      OpenAQ-Transit
+      <span>Curb-to-Cabin PM Monitoring</span>
+    </h1>
+    
+    <p class="hero-tagline">
+      The first unified air-quality monitoring network in Sub-Saharan Africa—tracking particulate matter exposure from bus stops to inside buses across Nairobi and Kigali.
+    </p>
+    
+    <div class="hero-stats">
+      <div class="stat-cell">
+        <div class="stat-value">55</div>
+        <div class="stat-label">Production Nodes</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-value">&lt;15%</div>
+        <div class="stat-label">Calibration Bias</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-value">99%</div>
+        <div class="stat-label">Sync Reliability</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-value">88%</div>
+        <div class="stat-label">Duty-Cycle Reduction</div>
+      </div>
+    </div>
+  </div>
 </section>
+
+<!-- Problem Section -->
 <div class="container">
-  <div class="section-anchor" id="hardware"></div>
-  <section class="section-break">
-    <h2 class="section-label">02 — Hardware Architecture</h2>
-    <ul>
-      <li><strong>Dual Sensors:</strong> Twin optical PM sensors on staggered duty cycles for in-field drift tracking.</li>
-      <li><strong>Bus-Stop Units:</strong> 15W solar-powered nodes for city-scale exposure mapping.</li>
-      <li><strong>Bus-Mounted Units:</strong> Powered by the vehicle rail, featuring PIR-triggered cameras for source attribution.</li>
-      <li><strong>Connectivity:</strong> Data uploaded via cellular Notehub link with over-the-air firmware updates.</li>
-    </ul>
+  <section class="section" id="problem">
+    <div class="section-header">
+      <div class="section-label">01 — THE PROBLEM</div>
+      <h2 class="section-title">Air Quality Crisis in Urban Africa</h2>
+      <p class="section-desc">
+        Road transport significantly contributes to air pollution in Sub-Saharan Africa, where diesel buses on poorly maintained roads release exhaust and resuspend dust. Commuters face prolonged exposure at curbside stops and inside poorly ventilated buses—but street-level data remains scarce.
+      </p>
+    </div>
+    
+    <div class="impact-grid">
+      <div class="impact-card">
+        <div class="impact-number">80+<span class="impact-unit">µg/m³</span></div>
+        <div class="impact-context">PM₂.₅ levels during rush hours in Nairobi and Kigali—over 5× the WHO 24-hour limit of 15 µg/m³</div>
+        <div class="impact-source">Kinney et al. 2011; Subramanian et al. 2020</div>
+      </div>
+      <div class="impact-card">
+        <div class="impact-number">70%<span class="impact-unit">+</span></div>
+        <div class="impact-context">of roads in SSA are unpaved or poorly maintained, creating continuous dust resuspension</div>
+        <div class="impact-source">Gwilliam et al. 2008</div>
+      </div>
+      <div class="impact-card">
+        <div class="impact-number">26<span class="impact-unit">µg/m³</span></div>
+        <div class="impact-context">Annual median PM₂.₅ across African countries—5× the WHO annual guideline of 5 µg/m³</div>
+        <div class="impact-source">WHO Global Assessment 2016</div>
+      </div>
+    </div>
   </section>
-  <div class="section-anchor" id="deployment"></div>
-  <section class="section-break">
-    <h2 class="section-label">03 — Deployment & Results</h2>
-    <p style="color: var(--text-dim); margin-bottom: 20px;">The network enables evaluation of real-world impacts during diesel-to-electric bus transitions.</p>
-    <ul>
-      <li>Achieved &lt; 15% bias in 14-day calibration co-location tests.</li>
-      <li>99% data-sync reliability across the 55-node production run.</li>
-      <li>Reduces PM sensor duty-cycle by 88% while maintaining accuracy.</li>
-    </ul>
+
+  <!-- Architecture Section -->
+  <section class="section" id="architecture">
+    <div class="section-header">
+      <div class="section-label">02 — SYSTEM ARCHITECTURE</div>
+      <h2 class="section-title">Dual-Mode Sensing Platform</h2>
+      <p class="section-desc">
+        A single node design operates at both bus stops (solar-powered) and on buses (vehicle-powered), enabling unified exposure tracking from curb to cabin with consistent data comparability.
+      </p>
+    </div>
+    
+    <div class="architecture-container">
+      <div class="arch-diagram">
+        <div class="arch-row">
+          <div class="arch-node highlight">
+            <div class="arch-icon">🔬</div>
+            <div class="arch-title">Sensor Plane</div>
+            <div class="arch-desc">Twin optical PM sensors on staggered duty cycles for in-field drift tracking</div>
+            <div class="arch-specs">
+              <div class="spec-item">Dual PMSA003I (PM₁.₀, PM₂.₅)</div>
+              <div class="spec-item">BME280 (T, RH, P)</div>
+              <div class="spec-item">PIR + ArduCAM OV2640</div>
+              <div class="spec-item">Grove Loudness Sensor</div>
+            </div>
+          </div>
+          
+          <div class="arch-connector">
+            <div class="connector-line"></div>
+          </div>
+          
+          <div class="arch-node">
+            <div class="arch-icon">⚙️</div>
+            <div class="arch-title">Control Plane</div>
+            <div class="arch-desc">Low-leakage MCU with real-time scheduler and battery-aware task gating</div>
+            <div class="arch-specs">
+              <div class="spec-item">Blues Swan v3.0 (STM32L4R5)</div>
+              <div class="spec-item">TCA9548A I²C Multiplexer</div>
+              <div class="spec-item">64GB µSD Local Storage</div>
+              <div class="spec-item">8µA Deep Sleep Current</div>
+            </div>
+          </div>
+          
+          <div class="arch-connector">
+            <div class="connector-line"></div>
+          </div>
+          
+          <div class="arch-node">
+            <div class="arch-icon">📡</div>
+            <div class="arch-title">Back-haul Plane</div>
+            <div class="arch-desc">Cellular/WiFi modem with 30-day encrypted queue and OTA updates</div>
+            <div class="arch-specs">
+              <div class="spec-item">NOTE-WBGL (LTE Cat 1 + WiFi)</div>
+              <div class="spec-item">Built-in GNSS + Accelerometer</div>
+              <div class="spec-item">TLS-encrypted Upload</div>
+              <div class="spec-item">30-day Message Buffer</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Mode Comparison -->
+    <div class="modes-grid">
+      <div class="mode-card">
+        <div class="mode-header">
+          <div class="mode-icon solar">☀️</div>
+          <div>
+            <div class="mode-title">Bus-Stop Mode</div>
+            <div class="mode-subtitle">25 solar-powered units</div>
+          </div>
+        </div>
+        <div class="mode-body">
+          <div class="mode-specs">
+            <div class="mode-spec">
+              <span class="mode-spec-label">Power Source</span>
+              <span class="mode-spec-value">15W Solar + 20Ah Battery</span>
+            </div>
+            <div class="mode-spec">
+              <span class="mode-spec-label">Autonomy</span>
+              <span class="mode-spec-value">48+ hours (no sun)</span>
+            </div>
+            <div class="mode-spec">
+              <span class="mode-spec-label">Upload Interval</span>
+              <span class="mode-spec-value">5h (SoC-adaptive)</span>
+            </div>
+            <div class="mode-spec">
+              <span class="mode-spec-label">GPS Fix</span>
+              <span class="mode-spec-value">8–48h (SoC-dependent)</span>
+            </div>
+            <div class="mode-spec">
+              <span class="mode-spec-label">Camera</span>
+              <span class="mode-spec-value">PIR-triggered + 10min heartbeat</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mode-card">
+        <div class="mode-header">
+          <div class="mode-icon bus">🚌</div>
+          <div>
+            <div class="mode-title">Bus-Mounted Mode</div>
+            <div class="mode-subtitle">30 vehicle-powered units</div>
+          </div>
+        </div>
+        <div class="mode-body">
+          <div class="mode-specs">
+            <div class="mode-spec">
+              <span class="mode-spec-label">Power Source</span>
+              <span class="mode-spec-value">Dashboard USB (5V)</span>
+            </div>
+            <div class="mode-spec">
+              <span class="mode-spec-label">Operation</span>
+              <span class="mode-spec-value">Continuous (bus on)</span>
+            </div>
+            <div class="mode-spec">
+              <span class="mode-spec-label">Upload Interval</span>
+              <span class="mode-spec-value">60 min</span>
+            </div>
+            <div class="mode-spec">
+              <span class="mode-spec-label">GPS Fix</span>
+              <span class="mode-spec-value">Every 5 min (route tracking)</span>
+            </div>
+            <div class="mode-spec">
+              <span class="mode-spec-label">Camera</span>
+              <span class="mode-spec-value">Disabled (privacy)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Results Section -->
+  <section class="section" id="results">
+    <div class="section-header">
+      <div class="section-label">03 — EVALUATION RESULTS</div>
+      <h2 class="section-title">14-Day BAM Co-location Study</h2>
+      <p class="section-desc">
+        All 55 production nodes underwent chamber calibration alongside a beta-attenuation monitor (BAM) reference instrument, achieving strong accuracy and reliability metrics.
+      </p>
+    </div>
+    
+    <div class="results-grid">
+      <div class="result-cell" data-label="ACCURACY">
+        <div class="result-value">&lt;15%</div>
+        <div class="result-context">Span error after calibration</div>
+      </div>
+      <div class="result-cell" data-label="PRECISION">
+        <div class="result-value">±2.8</div>
+        <div class="result-context">µg/m³ MAE vs. BAM</div>
+      </div>
+      <div class="result-cell" data-label="CORRELATION">
+        <div class="result-value">0.981</div>
+        <div class="result-context">r during dust burst (p &lt; 3×10⁻¹⁷)</div>
+      </div>
+      <div class="result-cell" data-label="RECOVERY">
+        <div class="result-value">11±1.3</div>
+        <div class="result-context">min return to baseline</div>
+      </div>
+      <div class="result-cell" data-label="SYNC RATE">
+        <div class="result-value">99%</div>
+        <div class="result-context">Cloud sync success</div>
+      </div>
+      <div class="result-cell" data-label="EFFICIENCY">
+        <div class="result-value">88%</div>
+        <div class="result-context">Duty-cycle reduction</div>
+      </div>
+    </div>
+    
+    <div class="section-header" style="margin-top: 4rem;">
+      <div class="section-label">04 — DEPLOYMENT TIMELINE</div>
+      <h2 class="section-title">Two-Year Rollout Plan</h2>
+    </div>
+    
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-date">NOV–DEC 2024</div>
+        <div class="timeline-title">Chamber Calibration Complete</div>
+        <div class="timeline-desc">14-day BAM co-location for all 55 nodes. Span coefficients derived and validated.</div>
+      </div>
+      <div class="timeline-item upcoming">
+        <div class="timeline-date"> 2026</div>
+        <div class="timeline-title">Field Deployment Begins</div>
+        <div class="timeline-desc">Initial rollout in Nairobi and Kigali on diesel, electric, and mixed bus routes.</div>
+      </div>
+      <div class="timeline-item upcoming">
+        <div class="timeline-date">Coming soon</div>
+        <div class="timeline-title">Open Source Release</div>
+        <div class="timeline-desc">PCB files, firmware, and analysis notebooks released under permissive licenses.</div>
+      </div>
+      <div class="timeline-item upcoming">
+        <div class="timeline-date">2026–2028</div>
+        <div class="timeline-title">Longitudinal Study</div>
+        <div class="timeline-desc">Two-year continuous monitoring to quantify PM₂.₅ reductions from bus electrification.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Resources Section -->
+  <section class="section" id="resources">
+    <div class="section-header">
+      <div class="section-label">05 — RESOURCES</div>
+      <h2 class="section-title">Access the Project</h2>
+      <p class="section-desc">
+        All hardware, firmware, and analysis tools will be released under permissive licenses following the first public data release.
+      </p>
+    </div>
+    
+    <div class="resources-grid">
+      <a href="#" class="resource-link disabled" title="Available Q4 2025">
+        <div class="resource-icon">📄</div>
+        <div>
+          <div class="resource-title">Design Paper (Preprint)</div>
+          <div class="resource-meta">Under Review</div>
+        </div>
+      </a>
+      <a href="#" class="resource-link disabled" title="Available Q4 2025">
+        <div class="resource-icon">🔧</div>
+        <div>
+          <div class="resource-title">Hardware Files</div>
+          <div class="resource-meta">PCB, ENCLOSURE • COMING SOON</div>
+        </div>
+      </a>
+      <a href="#" class="resource-link disabled" title="Available Soon">
+        <div class="resource-icon">💻</div>
+        <div>
+          <div class="resource-title">Firmware</div>
+          <div class="resource-meta">GITHUB • COMING SOON</div>
+        </div>
+      </a>
+      <a href="#" class="resource-link disabled" title="Available Q4 2025">
+        <div class="resource-icon">📊</div>
+        <div>
+          <div class="resource-title">Analysis Notebooks</div>
+          <div class="resource-meta">JUPYTER • COMING SOON</div>
+        </div>
+      </a>
+    </div>
+    
+    <div class="citation-box">
+      <div class="citation-header">
+        <span class="citation-label">BIBTEX CITATION</span>
+        <button class="copy-btn" onclick="copyCitation()">COPY</button>
+      </div>
+      <div class="citation-content" id="citation-text">
+@inproceedings{openaq-transit2026,
+  title     = {Rolling and Standing: A Low-Cost Curb-to-Cabin PM 
+               Monitoring Sensor Network for Sub-Saharan Africa},
+  author    = {[Authors]},
+  booktitle = {Proceedings of ACM BuildSys 2026},
+  year      = {2026},
+  note      = {In submission}
+}
+      </div>
+    </div>
   </section>
 </div>
+
+<footer class="page-footer">
+  <p class="footer-text">
+    OpenAQ-Transit is a collaboration with <a href="#">BasiGo Ltd.</a> for electric bus fleet access in East Africa.<br>
+    Contact: <a href="mailto:mkyatha@umass.edu">mkyatha@umass.edu</a>
+  </p>
+</footer>
+
 <script>
 function goToSection(id) {
   const element = document.getElementById(id);
-  if (element) { element.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  
+  // Update active nav button
+  document.querySelectorAll('.stage-btn').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
 }
+
+function copyCitation() {
+  const text = document.getElementById('citation-text').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = 'COPIED!';
+    setTimeout(() => btn.textContent = 'COPY', 2000);
+  });
+}
+
+// Update nav on scroll
+const sections = ['overview', 'problem', 'architecture', 'results', 'resources'];
+const navButtons = document.querySelectorAll('.stage-btn');
+
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(id => {
+    const section = document.getElementById(id);
+    if (section && window.scrollY >= section.offsetTop - 200) {
+      current = id;
+    }
+  });
+  
+  navButtons.forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.textContent.toLowerCase().includes(current) || 
+        (current === 'overview' && btn.textContent.includes('OVERVIEW'))) {
+      btn.classList.add('active');
+    }
+  });
+});
 </script>
+
 </body>
 </html>
