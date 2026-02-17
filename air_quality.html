@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenAQ-Transit — IoT Particle Monitoring</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root { --bg: #06090f; --surface: #0d1320; --border: #1a2640; --text: #e4eaf2; --accent: #34d399; --accent-glow: rgba(52, 211, 153, 0.08); }
+/* ... (Style rules matching index.html for consistency) ... */
+</style>
+</head>
+<body>
+<nav class="stage-nav">
+  <button class="stage-btn" onclick="window.location.href='index.html'">00 PROJECTS HOME</button>
+  <button class="stage-btn active" onclick="goToSection('overview')">01 OVERVIEW</button>
+  <button class="stage-btn" onclick="goToSection('hardware')">02 HARDWARE</button>
+  <button class="stage-btn" onclick="goToSection('deployment')">03 DEPLOYMENT</button>
+</nav>
+<div class="section-anchor" id="overview"></div>
+<section class="hero">
+  <div class="badge">OPEN SOURCE HARDWARE</div>
+  <h1>OpenAQ-Transit</h1>
+  <p class="hero-tagline">A Low-Cost Curb-to-Cabin PM Monitoring Sensor Network for Sub-Saharan Africa.</p>
+  <div class="hero-number"><span class="big">55</span><span class="context">production units<br><strong>deployed in Nairobi & Kigali</strong></span></div>
+</section>
+<div class="container">
+  <div class="section-anchor" id="hardware"></div>
+  <section class="section-break">
+    <h2 class="section-label" style="color: var(--accent);">02 — System Architecture</h2>
+    <p>The network integrates twin optical PM sensors on staggered duty cycles for in-field drift tracking.</p>
+    <ul>
+      <li><strong>Bus-Stop Units:</strong> 15W solar-powered nodes.</li>
+      <li><strong>Bus-Mounted Units:</strong> Drawing power from vehicle rails with PIR-triggered cameras for source attribution.</li>
+    </ul>
+  </section>
+  <div class="section-anchor" id="deployment"></div>
+  <section class="section-break">
+    <h2 class="section-label" style="color: var(--accent);">03 — Deployment & Reliability</h2>
+    <p>Data is uploaded via cellular link supporting over-the-air firmware updates. Calibration achieved &lt; 15% bias in co-location tests.</p>
+  </section>
+</div>
+<script>
+function goToSection(id) {
+  const element = document.getElementById(id);
+  if (element) { element.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+}
+</script>
+</body>
+</html>
