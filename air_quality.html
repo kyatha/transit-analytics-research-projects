@@ -1,47 +1,73 @@
-<!-- air_quality.html file -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OpenAQ-Transit — Curb-to-Cabin PM Monitoring for Sub-Saharan Africa</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #050810;
-  --surface: #0a0f1a;
-  --surface-raised: #0f1525;
-  --border: #1a2540;
-  --border-bright: #2a3a60;
-  --text: #e8edf5;
-  --text-muted: #8899b3;
+  --bg: #06090f;
+  --surface: #0d1320;
+  --surface-alt: #111c2e;
+  --surface-raised: #162032;
+  --border: #1a2640;
+  --border-light: #243352;
+  --text: #e4eaf2;
+  --text-dim: #a0b4cc;
+  --text-muted: #5e7a9a;
+  --cyan: #38bdf8;
+  --cyan-glow: rgba(56,189,248,0.08);
+  --green: #34d399;
+  --green-glow: rgba(52,211,153,0.08);
+  --purple: #a78bfa;
+  --purple-glow: rgba(167,139,250,0.08);
+  --orange: #fb923c;
+  --orange-glow: rgba(251,146,60,0.08);
+  --red: #f87171;
+  --red-glow: rgba(248,113,113,0.06);
+  --pink: #f472b6;
+  --yellow: #fbbf24;
   --accent: #34d399;
   --accent-dim: #1a6b4d;
-  --accent-glow: rgba(52, 211, 153, 0.15);
-  --warning: #f59e0b;
-  --danger: #ef4444;
+  --accent-glow: rgba(52,211,153,0.12);
+  --warning: #fbbf24;
+  --danger: #f87171;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-
 html { scroll-behavior: smooth; }
 
 body {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   background: var(--bg);
   color: var(--text);
   line-height: 1.7;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Ambient particle animation in hero */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ─── GRAIN ─── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Ambient particle animation */
 .particle-field {
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
 }
-
 .particle {
   position: absolute;
   width: 4px;
@@ -51,7 +77,6 @@ body {
   opacity: 0;
   animation: float-particle 8s infinite;
 }
-
 @keyframes float-particle {
   0%, 100% { opacity: 0; transform: translateY(100vh) scale(0.5); }
   10% { opacity: 0.6; }
@@ -59,7 +84,7 @@ body {
   100% { opacity: 0; transform: translateY(-20vh) scale(1); }
 }
 
-/* Navigation */
+/* ─── NAVIGATION ─── */
 .stage-nav {
   position: fixed;
   top: 0;
@@ -68,19 +93,18 @@ body {
   z-index: 100;
   display: flex;
   gap: 0;
-  background: rgba(5, 8, 16, 0.85);
+  background: rgba(6, 9, 15, 0.85);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
   overflow-x: auto;
 }
-
 .stage-btn {
   flex: 1;
   min-width: 140px;
-  padding: 1rem 1.25rem;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.7rem;
-  font-weight: 500;
+  padding: 14px 18px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  font-weight: 700;
   letter-spacing: 0.08em;
   background: transparent;
   border: none;
@@ -89,12 +113,11 @@ body {
   cursor: pointer;
   transition: all 0.3s ease;
 }
-
 .stage-btn:last-child { border-right: none; }
 .stage-btn:hover { background: var(--surface); color: var(--text); }
 .stage-btn.active { background: var(--accent-glow); color: var(--accent); }
 
-/* Hero Section */
+/* ─── HERO ─── */
 .hero {
   position: relative;
   min-height: 100vh;
@@ -104,7 +127,6 @@ body {
   padding: 8rem 2rem 4rem;
   overflow: hidden;
 }
-
 .hero::before {
   content: '';
   position: absolute;
@@ -116,7 +138,6 @@ body {
   background: radial-gradient(ellipse at center top, var(--accent-glow), transparent 70%);
   pointer-events: none;
 }
-
 .hero-content {
   position: relative;
   max-width: 1200px;
@@ -128,10 +149,10 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.7rem;
-  font-weight: 500;
+  padding: 6px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 600;
   letter-spacing: 0.1em;
   color: var(--accent);
   background: var(--accent-glow);
@@ -139,7 +160,6 @@ body {
   border-radius: 2rem;
   margin-bottom: 1.5rem;
 }
-
 .badge::before {
   content: '';
   width: 6px;
@@ -148,20 +168,19 @@ body {
   border-radius: 50%;
   animation: pulse 2s infinite;
 }
-
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
 
 .hero h1 {
-  font-size: clamp(2.5rem, 8vw, 5rem);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(2.5rem, 8vw, 4.5rem);
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.1;
   margin-bottom: 1rem;
 }
-
 .hero h1 span {
   display: block;
   background: linear-gradient(135deg, var(--accent), #60a5fa);
@@ -171,13 +190,14 @@ body {
 }
 
 .hero-tagline {
-  font-size: 1.25rem;
-  color: var(--text-muted);
+  font-size: 1.2rem;
+  color: var(--text-dim);
   max-width: 600px;
   margin-bottom: 3rem;
+  line-height: 1.75;
 }
 
-/* Hero Stats Grid */
+/* Hero Stats */
 .hero-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -188,129 +208,109 @@ body {
   overflow: hidden;
   max-width: 700px;
 }
-
 .stat-cell {
   background: var(--surface);
   padding: 1.5rem;
   text-align: center;
 }
-
 .stat-value {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 2rem;
-  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2.2rem;
+  font-weight: 700;
   color: var(--accent);
   line-height: 1;
 }
-
 .stat-value.warning { color: var(--warning); }
 .stat-value.danger { color: var(--danger); }
-
 .stat-label {
-  font-size: 0.75rem;
+  font-size: 0.88rem;
   color: var(--text-muted);
   margin-top: 0.5rem;
-  letter-spacing: 0.02em;
 }
 
-/* Section Container */
+/* ─── SECTIONS ─── */
 .container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 2rem;
 }
-
 .section {
-  padding: 6rem 0;
+  padding: 5rem 0;
   border-top: 1px solid var(--border);
 }
-
-.section-header {
-  margin-bottom: 3rem;
-}
-
+.section-header { margin-bottom: 3rem; }
 .section-label {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
   letter-spacing: 0.15em;
   color: var(--accent);
   margin-bottom: 1rem;
 }
-
 .section-title {
-  font-size: clamp(1.75rem, 4vw, 2.5rem);
-  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-weight: 700;
   letter-spacing: -0.02em;
   margin-bottom: 1rem;
 }
-
 .section-desc {
   font-size: 1.1rem;
-  color: var(--text-muted);
+  color: var(--text-dim);
   max-width: 700px;
+  line-height: 1.75;
 }
 
-/* Problem Statement with Impact Numbers */
+/* ─── IMPACT CARDS ─── */
 .impact-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
   margin-top: 3rem;
 }
-
 .impact-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 2rem;
   position: relative;
   overflow: hidden;
 }
-
 .impact-card::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  top: 0; left: 0; right: 0;
   height: 3px;
   background: linear-gradient(90deg, var(--danger), var(--warning));
 }
-
 .impact-number {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 3rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--danger);
   line-height: 1;
 }
-
 .impact-unit {
-  font-size: 1rem;
+  font-size: 1.1rem;
   color: var(--text-muted);
   margin-left: 0.25rem;
 }
-
 .impact-context {
   margin-top: 0.75rem;
-  font-size: 0.95rem;
-  color: var(--text-muted);
+  font-size: 1.0rem;
+  color: var(--text-dim);
+  line-height: 1.6;
 }
-
 .impact-source {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.7rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
   color: var(--text-muted);
   margin-top: 1rem;
   opacity: 0.7;
 }
 
-/* Architecture Diagram */
-.architecture-container {
-  margin-top: 3rem;
-}
-
+/* ─── ARCHITECTURE ─── */
+.architecture-container { margin-top: 3rem; }
 .arch-diagram {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -318,7 +318,6 @@ body {
   padding: 2.5rem;
   position: relative;
 }
-
 .arch-row {
   display: flex;
   justify-content: space-between;
@@ -326,29 +325,24 @@ body {
   gap: 2rem;
   margin-bottom: 2rem;
 }
-
 .arch-row:last-child { margin-bottom: 0; }
-
 .arch-node {
   flex: 1;
-  background: var(--surface-raised);
+  background: var(--surface-alt);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 1.5rem;
   position: relative;
   transition: all 0.3s ease;
 }
-
 .arch-node:hover {
   border-color: var(--accent-dim);
   box-shadow: 0 0 30px var(--accent-glow);
 }
-
 .arch-node.highlight {
   border-color: var(--accent);
-  background: linear-gradient(135deg, var(--surface-raised), rgba(52, 211, 153, 0.05));
+  background: linear-gradient(135deg, var(--surface-alt), rgba(52, 211, 153, 0.05));
 }
-
 .arch-icon {
   width: 48px;
   height: 48px;
@@ -361,53 +355,47 @@ body {
   margin-bottom: 1rem;
   font-size: 1.5rem;
 }
-
 .arch-title {
-  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 1.05rem;
   margin-bottom: 0.5rem;
 }
-
 .arch-desc {
-  font-size: 0.85rem;
-  color: var(--text-muted);
+  font-size: 0.95rem;
+  color: var(--text-dim);
   line-height: 1.6;
 }
-
 .arch-specs {
   margin-top: 1rem;
   padding-top: 1rem;
   border-top: 1px solid var(--border);
 }
-
 .spec-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-bottom: 0.35rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  margin-bottom: 0.4rem;
 }
-
 .spec-item::before {
   content: '→';
   color: var(--accent);
 }
-
 .arch-connector {
   flex: 0 0 60px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-
 .connector-line {
   width: 100%;
   height: 2px;
   background: linear-gradient(90deg, var(--border), var(--accent), var(--border));
   position: relative;
 }
-
 .connector-line::after {
   content: '⟶';
   position: absolute;
@@ -418,21 +406,79 @@ body {
   font-size: 1rem;
 }
 
-/* Modes Comparison */
+/* ─── IMAGE GALLERY ─── */
+.image-gallery {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 2rem;
+}
+@media (max-width: 700px) { .image-gallery { grid-template-columns: 1fr; } }
+.gallery-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+.gallery-item:hover { border-color: var(--border-light); }
+.gallery-item img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.gallery-caption {
+  padding: 12px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+}
+.gallery-caption strong {
+  color: var(--text-dim);
+}
+
+/* Full-width diagram */
+.diagram-full {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 2rem;
+}
+.diagram-full img {
+  width: 100%;
+  height: auto;
+  display: block;
+  padding: 20px;
+  background: #fff;
+  border-radius: 10px 10px 0 0;
+}
+.diagram-full.dark-bg img {
+  background: var(--bg);
+  padding: 16px;
+}
+.diagram-caption {
+  padding: 12px 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+}
+
+/* ─── MODE CARDS ─── */
 .modes-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1.5rem;
   margin-top: 3rem;
 }
-
 .mode-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
 }
-
 .mode-header {
   padding: 1.5rem;
   border-bottom: 1px solid var(--border);
@@ -440,7 +486,6 @@ body {
   align-items: center;
   gap: 1rem;
 }
-
 .mode-icon {
   width: 56px;
   height: 56px;
@@ -450,53 +495,42 @@ body {
   border-radius: 8px;
   font-size: 1.75rem;
 }
-
 .mode-icon.solar {
   background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(251, 191, 36, 0.05));
   border: 1px solid rgba(251, 191, 36, 0.3);
 }
-
 .mode-icon.bus {
   background: linear-gradient(135deg, rgba(96, 165, 250, 0.2), rgba(96, 165, 250, 0.05));
   border: 1px solid rgba(96, 165, 250, 0.3);
 }
-
 .mode-title {
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.15rem;
+  font-weight: 700;
 }
-
 .mode-subtitle {
-  font-size: 0.85rem;
-  color: var(--text-muted);
+  font-size: 0.92rem;
+  color: var(--text-dim);
 }
-
-.mode-body {
-  padding: 1.5rem;
-}
-
-.mode-specs {
-  display: grid;
-  gap: 0.75rem;
-}
-
+.mode-body { padding: 1.5rem; }
+.mode-specs { display: grid; gap: 0.75rem; }
 .mode-spec {
   display: flex;
   justify-content: space-between;
   padding: 0.75rem;
-  background: var(--surface-raised);
+  background: var(--surface-alt);
   border-radius: 6px;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
-
-.mode-spec-label { color: var(--text-muted); }
-.mode-spec-value { 
-  font-family: 'IBM Plex Mono', monospace;
-  font-weight: 500;
+.mode-spec-label { color: var(--text-dim); }
+.mode-spec-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
   color: var(--accent);
+  font-size: 0.88rem;
 }
 
-/* Results Section */
+/* ─── RESULTS ─── */
 .results-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -507,59 +541,51 @@ body {
   overflow: hidden;
   margin-top: 3rem;
 }
-
 .result-cell {
   background: var(--surface);
   padding: 2rem;
   text-align: center;
   position: relative;
 }
-
 .result-cell::before {
   content: attr(data-label);
   position: absolute;
   top: 0.75rem;
   left: 50%;
   transform: translateX(-50%);
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.65rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
   letter-spacing: 0.1em;
   color: var(--text-muted);
   opacity: 0.7;
 }
-
 .result-value {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 2.5rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--accent);
   line-height: 1;
   margin-top: 1rem;
 }
-
 .result-context {
-  font-size: 0.85rem;
-  color: var(--text-muted);
+  font-size: 0.92rem;
+  color: var(--text-dim);
   margin-top: 0.75rem;
 }
 
-/* Timeline */
+/* ─── TIMELINE ─── */
 .timeline {
   margin-top: 3rem;
   position: relative;
   padding-left: 2rem;
 }
-
 .timeline::before {
   content: '';
   position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
+  left: 0; top: 0; bottom: 0;
   width: 2px;
   background: linear-gradient(180deg, var(--accent), var(--border));
 }
-
 .timeline-item {
   position: relative;
   padding: 1.5rem;
@@ -569,7 +595,6 @@ body {
   border-radius: 8px;
   margin-bottom: 1rem;
 }
-
 .timeline-item::before {
   content: '';
   position: absolute;
@@ -582,37 +607,36 @@ body {
   border-radius: 50%;
   border: 3px solid var(--bg);
 }
-
 .timeline-item.upcoming::before {
   background: var(--surface);
   border: 3px solid var(--accent);
 }
-
 .timeline-date {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.8rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
   color: var(--accent);
   margin-bottom: 0.5rem;
-}
-
-.timeline-title {
   font-weight: 600;
+}
+.timeline-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 1.05rem;
   margin-bottom: 0.25rem;
 }
-
 .timeline-desc {
-  font-size: 0.9rem;
-  color: var(--text-muted);
+  font-size: 0.95rem;
+  color: var(--text-dim);
+  line-height: 1.6;
 }
 
-/* Resources Section */
+/* ─── RESOURCES ─── */
 .resources-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1rem;
   margin-top: 2rem;
 }
-
 .resource-link {
   display: flex;
   align-items: center;
@@ -625,41 +649,38 @@ body {
   color: var(--text);
   transition: all 0.3s ease;
 }
-
 .resource-link:hover {
   border-color: var(--accent-dim);
-  background: var(--surface-raised);
+  background: var(--surface-alt);
 }
-
 .resource-link.disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
-
 .resource-icon {
   width: 44px;
   height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--surface-raised);
+  background: var(--surface-alt);
   border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 1.25rem;
 }
-
 .resource-title {
-  font-weight: 500;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  font-size: 0.95rem;
   margin-bottom: 0.15rem;
 }
-
 .resource-meta {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.7rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
   color: var(--text-muted);
 }
 
-/* Citation Box */
+/* ─── CITATION ─── */
 .citation-box {
   margin-top: 3rem;
   background: var(--surface);
@@ -667,27 +688,25 @@ body {
   border-radius: 8px;
   overflow: hidden;
 }
-
 .citation-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  background: var(--surface-raised);
+  background: var(--surface-alt);
   border-bottom: 1px solid var(--border);
 }
-
 .citation-label {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
   letter-spacing: 0.1em;
   color: var(--text-muted);
 }
-
 .copy-btn {
-  padding: 0.4rem 0.8rem;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.7rem;
+  padding: 6px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
   background: var(--accent-glow);
   border: 1px solid var(--accent-dim);
   border-radius: 4px;
@@ -695,45 +714,42 @@ body {
   cursor: pointer;
   transition: all 0.2s ease;
 }
-
 .copy-btn:hover {
   background: var(--accent);
   color: var(--bg);
 }
-
 .citation-content {
   padding: 1.5rem;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.85rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.88rem;
   line-height: 1.8;
-  color: var(--text-muted);
+  color: var(--text-dim);
+  white-space: pre-wrap;
 }
 
-/* Footer */
+/* ─── FOOTER ─── */
 .page-footer {
   padding: 3rem 2rem;
   border-top: 1px solid var(--border);
   text-align: center;
 }
-
 .footer-text {
-  font-size: 0.85rem;
+  font-size: 0.92rem;
   color: var(--text-muted);
 }
-
 .footer-text a {
   color: var(--accent);
   text-decoration: none;
 }
 
-/* Responsive */
+/* ─── RESPONSIVE ─── */
 @media (max-width: 768px) {
   .hero { padding: 6rem 1.5rem 3rem; }
   .container { padding: 0 1.5rem; }
   .section { padding: 4rem 0; }
   .arch-row { flex-direction: column; }
-  .arch-connector { 
-    height: 40px; 
+  .arch-connector {
+    height: 40px;
     width: 2px;
     margin: 0 auto;
   }
@@ -749,6 +765,18 @@ body {
     bottom: -12px;
     transform: translateX(50%);
   }
+  .image-gallery { grid-template-columns: 1fr; }
+}
+
+/* ─── ANIMATIONS ─── */
+.fade-in {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 </style>
 </head>
@@ -775,19 +803,19 @@ body {
     <div class="particle" style="left: 80%; animation-delay: 1.6s;"></div>
     <div class="particle" style="left: 90%; animation-delay: 4s;"></div>
   </div>
-  
+
   <div class="hero-content">
     <div class="badge">OPEN SOURCE HARDWARE • IoT SYSTEM</div>
-    
+
     <h1>
       OpenAQ-Transit
       <span>Curb-to-Cabin PM Monitoring</span>
     </h1>
-    
+
     <p class="hero-tagline">
       The first unified air-quality monitoring network in Sub-Saharan Africa—tracking particulate matter exposure from bus stops to inside buses across Nairobi and Kigali.
     </p>
-    
+
     <div class="hero-stats">
       <div class="stat-cell">
         <div class="stat-value">55</div>
@@ -811,7 +839,7 @@ body {
 
 <!-- Problem Section -->
 <div class="container">
-  <section class="section" id="problem">
+  <section class="section fade-in" id="problem">
     <div class="section-header">
       <div class="section-label">01 — THE PROBLEM</div>
       <h2 class="section-title">Air Quality Crisis in Urban Africa</h2>
@@ -819,7 +847,7 @@ body {
         Road transport significantly contributes to air pollution in Sub-Saharan Africa, where diesel buses on poorly maintained roads release exhaust and resuspend dust. Commuters face prolonged exposure at curbside stops and inside poorly ventilated buses—but street-level data remains scarce.
       </p>
     </div>
-    
+
     <div class="impact-grid">
       <div class="impact-card">
         <div class="impact-number">80+<span class="impact-unit">µg/m³</span></div>
@@ -840,7 +868,7 @@ body {
   </section>
 
   <!-- Architecture Section -->
-  <section class="section" id="architecture">
+  <section class="section fade-in" id="architecture">
     <div class="section-header">
       <div class="section-label">02 — SYSTEM ARCHITECTURE</div>
       <h2 class="section-title">Dual-Mode Sensing Platform</h2>
@@ -848,7 +876,13 @@ body {
         A single node design operates at both bus stops (solar-powered) and on buses (vehicle-powered), enabling unified exposure tracking from curb to cabin with consistent data comparability.
       </p>
     </div>
-    
+
+    <!-- System Overview Diagram -->
+    <div class="diagram-full">
+      <img src="overview.png" alt="OpenAQ-Transit system architecture overview showing sensor bus, controller, local storage, modem, cloud, and data fields">
+      <div class="diagram-caption"><strong>Figure 1:</strong> OpenAQ-Transit system architecture — data flows from sensor bus through controller and modem to cloud storage.</div>
+    </div>
+
     <div class="architecture-container">
       <div class="arch-diagram">
         <div class="arch-row">
@@ -863,11 +897,11 @@ body {
               <div class="spec-item">Grove Loudness Sensor</div>
             </div>
           </div>
-          
+
           <div class="arch-connector">
             <div class="connector-line"></div>
           </div>
-          
+
           <div class="arch-node">
             <div class="arch-icon">⚙️</div>
             <div class="arch-title">Control Plane</div>
@@ -879,11 +913,11 @@ body {
               <div class="spec-item">8µA Deep Sleep Current</div>
             </div>
           </div>
-          
+
           <div class="arch-connector">
             <div class="connector-line"></div>
           </div>
-          
+
           <div class="arch-node">
             <div class="arch-icon">📡</div>
             <div class="arch-title">Back-haul Plane</div>
@@ -898,7 +932,25 @@ body {
         </div>
       </div>
     </div>
-    
+
+    <!-- Hardware Block Diagram -->
+    <div class="diagram-full" style="margin-top: 2rem;">
+      <img src="hardware1.png" alt="Hardware block diagram showing sensor modules, controller, storage, power module, and communication subsystems">
+      <div class="diagram-caption"><strong>Figure 2:</strong> Hardware block diagram — colour-coded by deployment mode (blue = both, orange = bus-stop only, green = bus only).</div>
+    </div>
+
+    <!-- CAD Renders -->
+    <div class="image-gallery" style="margin-top: 2rem;">
+      <div class="gallery-item">
+        <img src="Capture.PNG" alt="CAD render of sensor node enclosure — front view">
+        <div class="gallery-caption"><strong>Enclosure — Front:</strong> IP65-rated housing with camera turret, fan intake, and mounting brackets.</div>
+      </div>
+      <div class="gallery-item">
+        <img src="view_1.PNG" alt="CAD render of sensor node enclosure — internal view">
+        <div class="gallery-caption"><strong>Enclosure — Internal:</strong> Custom PCB, Blues Swan MCU, PM sensors, fan, and antenna routing visible.</div>
+      </div>
+    </div>
+
     <!-- Mode Comparison -->
     <div class="modes-grid">
       <div class="mode-card">
@@ -934,7 +986,7 @@ body {
           </div>
         </div>
       </div>
-      
+
       <div class="mode-card">
         <div class="mode-header">
           <div class="mode-icon bus">🚌</div>
@@ -972,7 +1024,7 @@ body {
   </section>
 
   <!-- Results Section -->
-  <section class="section" id="results">
+  <section class="section fade-in" id="results">
     <div class="section-header">
       <div class="section-label">03 — EVALUATION RESULTS</div>
       <h2 class="section-title">14-Day BAM Co-location Study</h2>
@@ -980,7 +1032,7 @@ body {
         All 55 production nodes underwent chamber calibration alongside a beta-attenuation monitor (BAM) reference instrument, achieving strong accuracy and reliability metrics.
       </p>
     </div>
-    
+
     <div class="results-grid">
       <div class="result-cell" data-label="ACCURACY">
         <div class="result-value">&lt;15%</div>
@@ -1007,12 +1059,12 @@ body {
         <div class="result-context">Duty-cycle reduction</div>
       </div>
     </div>
-    
+
     <div class="section-header" style="margin-top: 4rem;">
       <div class="section-label">04 — DEPLOYMENT TIMELINE</div>
       <h2 class="section-title">Two-Year Rollout Plan</h2>
     </div>
-    
+
     <div class="timeline">
       <div class="timeline-item">
         <div class="timeline-date">NOV–DEC 2024</div>
@@ -1020,7 +1072,7 @@ body {
         <div class="timeline-desc">14-day BAM co-location for all 55 nodes. Span coefficients derived and validated.</div>
       </div>
       <div class="timeline-item upcoming">
-        <div class="timeline-date"> 2026</div>
+        <div class="timeline-date">2026</div>
         <div class="timeline-title">Field Deployment Begins</div>
         <div class="timeline-desc">Initial rollout in Nairobi and Kigali on diesel, electric, and mixed bus routes.</div>
       </div>
@@ -1038,7 +1090,7 @@ body {
   </section>
 
   <!-- Resources Section -->
-  <section class="section" id="resources">
+  <section class="section fade-in" id="resources">
     <div class="section-header">
       <div class="section-label">05 — RESOURCES</div>
       <h2 class="section-title">Access the Project</h2>
@@ -1046,7 +1098,7 @@ body {
         All hardware, firmware, and analysis tools will be released under permissive licenses following the first public data release.
       </p>
     </div>
-    
+
     <div class="resources-grid">
       <a href="Updated_Rolling_and_Standing.pdf" class="resource-link" title="Design Paper">
         <div class="resource-icon">📄</div>
@@ -1077,22 +1129,20 @@ body {
         </div>
       </a>
     </div>
-    
+
     <div class="citation-box">
       <div class="citation-header">
         <span class="citation-label">BIBTEX CITATION</span>
         <button class="copy-btn" onclick="copyCitation()">COPY</button>
       </div>
-      <div class="citation-content" id="citation-text">
-@inproceedings{openaq-transit2026,
+      <div class="citation-content" id="citation-text">@inproceedings{openaq-transit2026,
   title     = {Rolling and Standing: A Low-Cost Curb-to-Cabin PM 
                Monitoring Sensor Network for Sub-Saharan Africa},
   author    = {[Authors]},
   booktitle = {Proceedings of ACM BuildSys 2026},
   year      = {2026},
   note      = {In submission}
-}
-      </div>
+}</div>
     </div>
   </section>
 </div>
@@ -1110,8 +1160,6 @@ function goToSection(id) {
   if (element) {
     element.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
-  
-  // Update active nav button
   document.querySelectorAll('.stage-btn').forEach(btn => btn.classList.remove('active'));
   event.target.classList.add('active');
 }
@@ -1125,10 +1173,9 @@ function copyCitation() {
   });
 }
 
-// Update nav on scroll
+// Nav highlight on scroll
 const sections = ['overview', 'problem', 'architecture', 'results', 'resources'];
 const navButtons = document.querySelectorAll('.stage-btn');
-
 window.addEventListener('scroll', () => {
   let current = '';
   sections.forEach(id => {
@@ -1137,15 +1184,23 @@ window.addEventListener('scroll', () => {
       current = id;
     }
   });
-  
   navButtons.forEach(btn => {
     btn.classList.remove('active');
-    if (btn.textContent.toLowerCase().includes(current) || 
+    if (btn.textContent.toLowerCase().includes(current) ||
         (current === 'overview' && btn.textContent.includes('OVERVIEW'))) {
       btn.classList.add('active');
     }
   });
 });
+
+// Scroll reveal
+const fadeEls = document.querySelectorAll('.fade-in');
+const fadeObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) e.target.classList.add('visible');
+  });
+}, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+fadeEls.forEach(el => fadeObserver.observe(el));
 </script>
 
 </body>
