@@ -19,6 +19,7 @@
   --accent: #38bdf8;
   --accent-glow: rgba(56, 189, 248, 0.08);
   --violet: #a78bfa;
+  --violet-glow: rgba(167, 139, 250, 0.08);
   --green: #34d399;
   --green-glow: rgba(52, 211, 153, 0.08);
   --red: #f87171;
@@ -84,6 +85,10 @@ body::before {
   letter-spacing: 0.8px;
   text-transform: uppercase;
   white-space: nowrap;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 .stage-btn:hover { border-color: var(--accent); color: var(--text-dim); }
 .stage-btn.active {
@@ -91,6 +96,16 @@ body::before {
   border-color: var(--accent);
   color: var(--accent);
   box-shadow: 0 0 20px rgba(56,189,248,0.08);
+}
+.stage-btn.home-btn {
+  background: var(--surface-raised);
+  border-color: var(--border-glow);
+  color: var(--text-dim);
+}
+.stage-btn.home-btn:hover {
+  border-color: var(--green);
+  color: var(--green);
+  background: var(--green-glow);
 }
 
 .container { max-width: 820px; margin: 0 auto; padding: 0 28px; }
@@ -644,6 +659,154 @@ body::before {
   margin-top: 2px;
 }
 
+/* ─── RESOURCES SECTION ─── */
+.resources-section {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0 28px 60px;
+}
+.resources-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.resources-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.res-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 5px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  background: var(--violet-glow);
+  color: var(--violet);
+  border: 1px solid rgba(167,139,250,0.2);
+}
+.resources-header h2 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+.resources-body {
+  padding: 24px;
+}
+.resources-intro {
+  font-size: 1.05rem;
+  color: var(--text-dim);
+  line-height: 1.75;
+  max-width: 700px;
+  margin-bottom: 24px;
+}
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 8px 0 28px;
+}
+.res-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 7px;
+  border: 1px solid var(--border-glow);
+  background: var(--surface-raised);
+  color: var(--text-dim);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.res-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-glow);
+}
+.res-btn .res-icon { font-size: 1rem; }
+.res-btn .res-tag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--bg);
+  padding: 2px 7px;
+  border-radius: 3px;
+  margin-left: 2px;
+}
+.res-btn.is-locked {
+  cursor: default;
+  opacity: 0.55;
+}
+.res-btn.is-locked:hover {
+  border-color: var(--border-glow);
+  color: var(--text-dim);
+  background: var(--surface-raised);
+}
+.sub-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin: 4px 0 12px;
+}
+.bibtex-block {
+  position: relative;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--violet);
+  border-radius: 6px;
+  padding: 20px 22px;
+  margin: 12px 0 0;
+  overflow-x: auto;
+}
+.bibtex-block pre {
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  line-height: 1.7;
+  color: var(--text-dim);
+  white-space: pre;
+}
+.bibtex-block code { font-family: inherit; }
+.copy-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 5px;
+  border: 1px solid var(--border-glow);
+  background: var(--surface-raised);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.3s;
+  letter-spacing: 0.5px;
+}
+.copy-btn:hover {
+  border-color: var(--violet);
+  color: var(--violet);
+  background: var(--violet-glow);
+}
+.copy-btn.copied {
+  border-color: var(--green);
+  color: var(--green);
+  background: var(--green-glow);
+}
+
 /* ─── NEXT PROJECT ─── */
 .next-project {
   border-top: 1px solid var(--border);
@@ -718,11 +881,11 @@ body::before {
   font-family: 'JetBrains Mono', monospace;
 }
 
-/* ─── ANIMATIONS ─── */
+/* ─── SCROLL REVEAL ─── */
 .reveal {
-  opacity: 1;
-  transform: none;
-  transition: opacity 0.8s ease, transform 0.8s ease;
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
 }
 .reveal.visible {
   opacity: 1;
@@ -745,6 +908,8 @@ body::before {
   .pipe-steps { flex-direction: column; gap: 16px; }
   .pipe-steps::before { display: none; }
   .stage-btn { padding: 6px 12px; font-size: 0.7rem; }
+  .btn-row { gap: 8px; }
+  .res-btn { font-size: 0.75rem; padding: 8px 14px; }
 }
 </style>
 </head>
@@ -752,14 +917,14 @@ body::before {
 
 <!-- ═══ STICKY NAV ═══ -->
 <nav class="stage-nav">
-  <button class="stage-btn" onclick="window.location.href='index.html'">HOME</button>
+  <a class="stage-btn home-btn" href="index.html">← HOME</a>
   <button class="stage-btn active" onclick="goToSection('hero')">OVERVIEW</button>
   <button class="stage-btn" onclick="goToSection('problem')">PROBLEM</button>
   <button class="stage-btn" onclick="goToSection('idea')">IDEA</button>
   <button class="stage-btn" onclick="goToSection('approach')">APPROACH</button>
   <button class="stage-btn" onclick="goToSection('results')">RESULTS</button>
-  <button class="stage-btn" onclick="goToSection('paper')">FULL PAPER</button>
-  <button class="stage-btn" onclick="window.location.href='vision_projects.html'">Vision Projects</button>
+  <button class="stage-btn" onclick="goToSection('resources')">RESOURCES</button>
+  <a class="stage-btn" href="vision_projects.html" style="border-color: var(--border-glow);">VISION PROJECTS</a>
 </nav>
 
 <!-- ═══ HERO ═══ -->
@@ -1191,30 +1356,49 @@ body::before {
   </div>
 </div>
 
-<!-- ═══ 06 — FULL PAPER ═══ -->
-<div class="section-anchor" id="paper"></div>
-<div class="cta-section">
-  <div class="cta-headline">Full ablation, parameters, and per-clip breakdowns<br>are in the paper.</div>
-  <div class="cta-sub">
-    How does each signal contribute? What happens when the camera switches from color to infrared mid-video? How do you filter a conductor who stands in the door for 15 seconds?
-  </div>
-  <a class="cta-btn" href="#">Full Paper ↗</a>
-  <div class="cta-details">
-    <div class="cta-det">
-      <div class="cta-det-val">24 clips</div>
-      <div class="cta-det-label">Evaluated</div>
+<!-- ═══ 06 — RESOURCES & CITATION ═══ -->
+<div class="section-anchor" id="resources"></div>
+<div class="resources-section reveal">
+  <div class="resources-card">
+    <div class="resources-header">
+      <span class="res-badge">06</span>
+      <h2>Resources & Citation</h2>
     </div>
-    <div class="cta-det">
-      <div class="cta-det-val">4 bus types</div>
-      <div class="cta-det-label">Tested</div>
-    </div>
-    <div class="cta-det">
-      <div class="cta-det-val">3 modalities</div>
-      <div class="cta-det-label">Color · B&W · IR</div>
-    </div>
-    <div class="cta-det">
-      <div class="cta-det-val">5 ablations</div>
-      <div class="cta-det-label">Each component isolated</div>
+    <div class="resources-body">
+      <p class="resources-intro">
+        Access project materials and cite this work. Code and data remain proprietary to deployment partners.
+      </p>
+
+      <div class="btn-row">
+        <a href="YOUR_PAPER_LINK" class="res-btn" target="_blank" rel="noopener">
+          <span class="res-icon">📄</span> Paper <span class="res-tag">Coming soon</span>
+        </a>
+        <a href="YOUR_SLIDES_LINK" class="res-btn" target="_blank" rel="noopener">
+          <span class="res-icon">🖥️</span> Slides <span class="res-tag">Coming soon</span>
+        </a>
+        <span class="res-btn is-locked" title="Proprietary to Basigo">
+          <span class="res-icon">🔒</span> Code <span class="res-tag">Proprietary</span>
+        </span>
+        <span class="res-btn is-locked" title="Proprietary to Basigo">
+          <span class="res-icon">🔒</span> Data <span class="res-tag">Proprietary</span>
+        </span>
+      </div>
+
+      <div class="sub-label" style="color: var(--violet);">BIBTEX CITATION</div>
+      <div class="bibtex-block">
+        <button class="copy-btn" onclick="copyBibtex()" title="Copy to clipboard">⧉ Copy</button>
+        <pre><code id="bibtex-code">@inproceedings{kyatha2025doorfuse,
+  title     = {DOORFUSE: Door-Aware Multi-Signal Fusion for
+               Stop-Level Bus Passenger Counting},
+  author    = {Kyatha, Mercy},
+  year      = {2025},
+  note      = {Multi-signal weighted scoring with door-state
+               gating and behavioral blocking for accurate
+               passenger counting across Nairobi and Kigali
+               transit systems.},
+  status    = {Under review}
+}</code></pre>
+      </div>
     </div>
   </div>
 </div>
@@ -1242,6 +1426,21 @@ function goToSection(id) {
   }
 }
 
+// ─── Copy BibTeX ───
+function copyBibtex() {
+  const code = document.getElementById('bibtex-code').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✓ Copied';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '⧉ Copy';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+// ─── Nav highlighting ───
 const navBtns = document.querySelectorAll('.stage-btn');
 const anchors = document.querySelectorAll('.section-anchor');
 
@@ -1265,6 +1464,16 @@ const navObs = new IntersectionObserver((entries) => {
 });
 
 anchors.forEach(a => navObs.observe(a));
+
+// ─── Scroll reveal ───
+const revealEls = document.querySelectorAll('.reveal');
+const revealObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) e.target.classList.add('visible');
+  });
+}, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+
+revealEls.forEach(el => revealObs.observe(el));
 </script>
 </body>
 </html>
