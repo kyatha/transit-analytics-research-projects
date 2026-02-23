@@ -778,7 +778,7 @@
       </div>
       <div class="info-panel">
         <p>The <strong>Homography Matrix H</strong> transforms the angled camera view into a metric top-down floor plan. Using the known bus width (2.55m) and door width (1.2m), we map all 5 detections into the virtual space.</p>
-        <p>In this unwarped view, the counting plane becomes a clean vertical line at <strong>x = 2.63m</strong> — the position of the interior pole.</p>
+        <p>In this unwarped view, the counting plane becomes a clean vertical line.</p>
         <div class="tag-row">
           <span class="tag warn">HOMOGRAPHY</span>
           <span class="tag">TOP-DOWN MAPPING</span>
@@ -795,7 +795,7 @@
 <div class="stage" id="stage-3">
   <div class="card">
     <div class="card-header">
-      <span class="step-badge">STEP 04</span>
+      <span class="step-badge" style="background:var(--purple-glow);color:var(--purple);border-color:rgba(167,139,250,0.3);">STEP 04</span>
       <h2>Interior 3D Counting Plane</h2>
     </div>
     <div class="card-body">
@@ -865,12 +865,13 @@
         </svg>
       </div>
       <div class="info-panel">
-        <p>Instead of counting at the door threshold (the floor line), we define a <strong>Vertical Counting Plane</strong> — the "blue curtain" — anchored to the <strong>interior pole with the stop knob</strong>.</p>
-        <p>This plane is positioned <strong>deep inside the cabin</strong>, creating a definitive "Point of No Return." A passenger's body must physically clear this plane before the count increments — eliminating parallax-induced false positives from people who appear to be inside but are still at the door.</p>
+        <p>The <strong>Counting Plane</strong> (the "blue curtain") is a vertical surface spanning floor-to-ceiling, anchored to the interior handrail pole and its stop knob. It sits <strong>deep inside the cabin</strong> — well past the door threshold.</p>
+        <p>A naive approach would place a counting line at the door (shown in red, ✗ IGNORED). But from a high-angle camera, a person's head can appear to cross the door line while their body is still outside. By placing the plane at the <strong>interior pole</strong>, we ensure a passenger is fully aboard before being counted.</p>
         <div class="tag-row">
-          <span class="tag">VERTICAL PLANE</span>
-          <span class="tag">INTERIOR ANCHOR</span>
-          <span class="tag">PARALLAX IMMUNE</span>
+          <span class="tag">INTERIOR POLE</span>
+          <span class="tag warn">VERTICAL PLANE</span>
+          <span class="tag">FLUX GATE</span>
+          <span class="tag">ANTI-PARALLAX</span>
         </div>
       </div>
     </div>
@@ -948,8 +949,8 @@
         </svg>
       </div>
       <div class="info-panel">
-        <p><strong>BoTSORT</strong> tracks each "dot" as it moves through the virtual bus. The counter only increments when a dot's trajectory vector <strong>physically intersects</strong> the interior counting plane.</p>
-        <p>All 5 passengers — including the recovered P5 — produce clear crossing events. The final count: <strong>IN: +5</strong>. The parallax error is fully eliminated because a head appearing "inside" in camera view won't trigger a count until the digital twin dot actually crosses the deep interior plane.</p>
+        <p><strong>BoTSORT</strong> tracks each passenger as a "dot" moving through the virtual bus floor plan. The counter increments only when a dot's trajectory <strong>crosses the interior counting plane</strong> — shown here as tick marks on the vertical blue line.</p>
+        <p>All 5 passengers — including P5, recovered by the heatmap in Step 02 — produce clear crossing events. Final count: <strong>IN: +5</strong>. Because the plane sits at the interior pole (not the door), a head appearing "inside" from the camera angle won't trigger a false count.</p>
         <div class="tag-row">
           <span class="tag">BoTSORT</span>
           <span class="tag">VECTOR CROSSING</span>
@@ -1073,10 +1074,60 @@
     </tbody>
   </table>
 </div>
+<div class="flow-connector"><div class="flow-arrow"></div></div>
+<!-- ═══════════════ STAGE 7: RESOURCES ═══════════════ -->
+<div class="stage" id="stage-6">
+  <div class="card">
+    <div class="card-header">
+      <span class="step-badge" style="background:var(--purple-glow);color:var(--purple);border-color:rgba(167,139,250,0.3);">STEP 07</span>
+      <h2>Resources & Citation</h2>
+    </div>
+    <div class="card-body" style="display:block; padding: 26px;">
+      <p style="font-size:0.95rem; color:var(--text-dim); line-height:1.8; margin-bottom:18px;">
+        Access project materials and cite this work. Code and data are proprietary to partner organizations.
+      </p>
+
+      <div class="resources-grid">
+        <a href="YOUR_PAPER_LINK" class="res-btn" target="_blank" rel="noopener">
+          <span class="res-icon">📄</span> Paper <span class="res-soon">Coming soon</span>
+        </a>
+        <a href="YOUR_SLIDES_LINK" class="res-btn" target="_blank" rel="noopener">
+          <span class="res-icon">🖥️</span> Slides <span class="res-soon">Coming soon</span>
+        </a>
+        <span class="res-btn is-locked" title="Proprietary to Basigo">
+          <span class="res-icon">🔒</span> Code <span class="res-soon">Proprietary</span>
+        </span>
+        <span class="res-btn is-locked" title="Proprietary to Basigo">
+          <span class="res-icon">🔒</span> Data <span class="res-soon">Proprietary</span>
+        </span>
+      </div>
+
+      <div class="bibtex-label">BIBTEX CITATION</div>
+      <div class="bibtex-block">
+        <button class="copy-btn" onclick="copyBibtex()">⧉ Copy</button>
+        <pre><code id="bibtex-code">@article{kyatha20253dcounting,
+  title     = {3D Counting Pipeline: Vision-Based Passenger
+               Counting via Digital Twin Projection},
+  author    = {Kyatha, Mercy},
+  year      = {2025},
+  note      = {Multi-modal detection with homography-based
+               3D counting plane for transit buses.
+               Nairobi and Kigali deployments.}
+}</code></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ FOOTER ═══════════════ -->
+<div class="page-footer">
+  3D Counting Pipeline — Bus Passenger Counting System<br>
+  Nairobi · Kigali · 2024–2026
+</div>
 
 <script>
   const stages = document.querySelectorAll('.stage');
-  const btns = document.querySelectorAll('.stage-btn');
+  const navBtns = document.querySelectorAll('.stage-btn:not(.home-btn)');
 
   function scrollToStage(i) {
     stages[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1087,18 +1138,18 @@
     entries.forEach(e => {
       if (e.isIntersecting) {
         const idx = Array.from(stages).indexOf(e.target);
-        btns.forEach(b => b.classList.remove('active'));
-        if (btns[idx]) btns[idx].classList.add('active');
+        navBtns.forEach(b => b.classList.remove('active'));
+        if (navBtns[idx]) navBtns[idx].classList.add('active');
       }
     });
   }, { threshold: 0.4 });
 
   stages.forEach(s => observer.observe(s));
 
-
-  // ─── Stage 6 Gallery Logic ───
+  // ─── Gallery Logic ───
   let currentFrame = 0;
   let autoplayInterval = null;
+  const totalFrames = 5;
 
   function showFrame(idx) {
     currentFrame = idx;
@@ -1122,11 +1173,27 @@
       btn.classList.remove('playing');
     } else {
       autoplayInterval = setInterval(() => {
-        showFrame((currentFrame + 1) % 4);
+        showFrame((currentFrame + 1) % totalFrames);
       }, 3000);
       btn.textContent = '⏸ Pause';
       btn.classList.add('playing');
     }
+  }
+
+  // ─── Copy BibTeX ───
+  function copyBibtex() {
+    const text = document.getElementById('bibtex-code').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = '✓ Copied';
+      btn.style.color = 'var(--green)';
+      btn.style.borderColor = 'var(--green)';
+      setTimeout(() => {
+        btn.textContent = '⧉ Copy';
+        btn.style.color = '';
+        btn.style.borderColor = '';
+      }, 2000);
+    });
   }
 
 </script>
