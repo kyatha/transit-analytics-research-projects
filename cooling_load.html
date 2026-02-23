@@ -490,6 +490,105 @@ body::before {
 }
 .status-ongoing { background: var(--accent-glow); color: var(--accent); }
 
+/* ─── RESOURCE BUTTONS ─── */
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 8px 0 24px;
+}
+.res-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 7px;
+  border: 1px solid var(--border-light);
+  background: var(--surface-alt);
+  color: var(--text-dim);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.res-btn:hover {
+  border-color: var(--purple);
+  color: var(--purple);
+  background: var(--purple-glow);
+}
+.res-btn .res-btn-icon { font-size: 1rem; }
+.res-btn .res-soon {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--bg);
+  padding: 2px 7px;
+  border-radius: 3px;
+  margin-left: 2px;
+}
+.res-btn.is-locked {
+  cursor: default;
+  opacity: 0.55;
+}
+.res-btn.is-locked:hover {
+  border-color: var(--border-light);
+  color: var(--text-dim);
+  background: var(--surface-alt);
+}
+
+/* ─── BIBTEX BLOCK ─── */
+.bibtex-block {
+  position: relative;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--purple);
+  border-radius: 6px;
+  padding: 20px 22px;
+  margin: 12px 0 0;
+  overflow-x: auto;
+}
+.bibtex-block pre {
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  line-height: 1.7;
+  color: var(--text-dim);
+  white-space: pre;
+}
+.bibtex-block code {
+  font-family: inherit;
+}
+.copy-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 5px;
+  border: 1px solid var(--border-light);
+  background: var(--surface-alt);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.3s;
+  letter-spacing: 0.5px;
+}
+.copy-btn:hover {
+  border-color: var(--purple);
+  color: var(--purple);
+  background: var(--purple-glow);
+}
+.copy-btn.copied {
+  border-color: var(--green);
+  color: var(--green);
+  background: var(--green-glow);
+}
+
 /* ─── FOOTER ─── */
 .footer {
   text-align: center;
@@ -528,6 +627,7 @@ body::before {
   <button class="stage-btn" onclick="goToSection('archetypes')">ARCHETYPES</button>
   <button class="stage-btn" onclick="goToSection('simulation')">SIMULATION</button>
   <button class="stage-btn" onclick="goToSection('grid')">GRID IMPACT</button>
+  <button class="stage-btn" onclick="goToSection('resources')">RESOURCES</button>
 </nav>
 
 <!-- ═══ HERO ═══ -->
@@ -843,6 +943,58 @@ body::before {
   </div>
 </div>
 
+
+<!-- ═══════════════════════════════════════ -->
+<!--        05 — RESOURCES                  -->
+<!-- ═══════════════════════════════════════ -->
+<div class="flow-connector"><div class="flow-arrow"></div></div>
+
+<div class="section-anchor" id="resources"></div>
+<div class="section-wrap fade-in">
+  <div class="card">
+    <div class="card-header">
+      <span class="step-badge purple">STEP 05</span>
+      <h2>Resources & Citation</h2>
+    </div>
+    <div class="card-body">
+      <p class="section-intro">
+        Access project materials and cite this work. Code and data are proprietary to partner organizations.
+      </p>
+
+      <div class="btn-row">
+        <a href="YOUR_PAPER_LINK" class="res-btn" target="_blank" rel="noopener">
+          <span class="res-btn-icon">📄</span> Paper <span class="res-soon">Coming soon</span>
+        </a>
+        <a href="YOUR_SLIDES_LINK" class="res-btn" target="_blank" rel="noopener">
+          <span class="res-btn-icon">🖥️</span> Slides <span class="res-soon">Coming soon</span>
+        </a>
+        <span class="res-btn is-locked" title="Proprietary to Basigo">
+          <span class="res-btn-icon">🔒</span> Code <span class="res-soon">Proprietary</span>
+        </span>
+        <span class="res-btn is-locked" title="Proprietary to Basigo">
+          <span class="res-btn-icon">🔒</span> Data <span class="res-soon">Proprietary</span>
+        </span>
+      </div>
+
+      <div class="sub-label" style="color: var(--purple);">BIBTEX CITATION</div>
+      <div class="bibtex-block">
+        <button class="copy-btn" onclick="copyBibtex()" title="Copy to clipboard">⧉ Copy</button>
+        <pre><code id="bibtex-code">@article{kyatha2025coolingload,
+  title     = {Electricity Demand Forecasting and Cooling Load
+               Analysis for Grid Resilience in East African Cities},
+  author    = {Kyatha, Mercy},
+  year      = {2025},
+  note      = {Simulation pipeline for transformer-level strain
+               estimation under rising AC adoption scenarios.
+               Nairobi and Kigali case studies.},
+  status    = {In preparation}
+}</code></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <!-- ═══ FOOTER ═══ -->
 <footer class="footer">
   <p style="margin-bottom:6px;">Electricity Demand Forecasting & Cooling Load Analysis</p>
@@ -857,6 +1009,20 @@ function goToSection(id) {
     const y = el.getBoundingClientRect().top + window.pageYOffset - 60;
     window.scrollTo({ top: y, behavior: 'smooth' });
   }
+}
+
+// ─── Copy BibTeX ───
+function copyBibtex() {
+  const code = document.getElementById('bibtex-code').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✓ Copied';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '⧉ Copy';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
 }
 
 // ─── Nav highlighting ───
