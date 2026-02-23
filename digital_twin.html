@@ -643,7 +643,7 @@
 
           
           <!-- Color legend -->
-          <rect x="250" y="220" width="80" height="8" rx="4" fill="linear-gradient(90deg, #3b82f6, #f59e0b, #ef4444)"/>
+          <rect x="250" y="245" width="80" height="8" rx="4" fill="linear-gradient(90deg, #3b82f6, #f59e0b, #ef4444)"/>
           <defs>
             <linearGradient id="legendGrad" x1="0" x2="1" y1="0" y2="0">
               <stop offset="0%" stop-color="#3b82f6"/>
@@ -651,9 +651,9 @@
               <stop offset="100%" stop-color="#ef4444"/>
             </linearGradient>
           </defs>
-          <rect x="250" y="220" width="80" height="8" rx="4" fill="url(#legendGrad)"/>
-          <text x="250" y="220" fill="#7b8ba5" font-size="7">LOW</text>
-          <text x="318" y="220" fill="#7b8ba5" font-size="7">HIGH</text>
+          <rect x="250" y="245" width="80" height="8" rx="4" fill="url(#legendGrad)"/>
+          <text x="250" y="224" fill="#7b8ba5" font-size="7">LOW</text>
+          <text x="318" y="245" fill="#7b8ba5" font-size="7">HIGH</text>
 
           <!-- Stats box -->
           <!-- <rect x="40" y="225" width="120" height="24" rx="4" fill="rgba(16,185,129,0.08)" stroke="rgba(16,185,129,0.3)" stroke-width="1"/> -->
@@ -679,8 +679,8 @@
 <div class="stage" id="stage-2">
   <div class="card">
     <div class="card-header">
-      <span class="step-badge">STEP 03</span>
-      <h2>Homography — 3D Perspective Mapping</h2>
+      <span class="step-badge" style="background:rgba(56,189,248,0.15);color:var(--accent);border-color:rgba(56,189,248,0.3);">STEP 03</span>
+      <h2>Homography — Side-View to Top-Down</h2>
     </div>
     <div class="card-body">
       <div class="diagram-panel">
@@ -700,12 +700,13 @@
           <g>
             <line x1="175" y1="125" x2="215" y2="125" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4 3" class="dash-anim"/>
             <polygon points="215,120 225,125 215,130" fill="#38bdf8"/>
-            <text x="195" y="115" fill="#38bdf8" font-size="7" text-anchor="middle">H</text>
+            <!-- <text x="195" y="115" fill="#38bdf8" font-size="7" text-anchor="middle">H</text> -->
+            <text x="185" y="115" text-anchor="middle" fill="#38bdf8" font-family="JetBrains Mono" font-size="7">H·[u,v,1]ᵀ</text>
             <text x="195" y="142" fill="#7b8ba5" font-size="6" text-anchor="middle">HOMOGRAPHY</text>
           </g>
 
           <!-- Right: Top-down virtual bus -->
-          <text x="240" y="18" fill="#7b8ba5" font-size="8" letter-spacing="1">VIRTUAL BUS (TOP-DOWN)</text>
+          <text x="240" y="18" fill="#7b8ba5" font-size="8" letter-spacing="1">TOP-DOWN</text>
 
           <!-- Bus outline -->
           <rect x="235" y="30" width="130" height="220" rx="10" fill="rgba(167,139,250,0.04)" stroke="#a78bfa" stroke-width="1.5"/>
@@ -728,6 +729,29 @@
           <circle cx="305" cy="105" r="5" fill="#38bdf8"/>
           <circle cx="280" cy="110" r="5" fill="#10b981"/>
 
+
+
+          <!-- Bus outline top-down -->
+          <rect x="240" y="70" width="80" height="120" rx="3" fill="none" stroke="#3e4d68" stroke-width="1"/>
+          <!-- Counting line — HORIZONTAL across bus width -->
+          <line x1="240" y1="130" x2="320" y2="130" stroke="#38bdf8" stroke-width="2" class="glow-line"/>
+          <text x="335" y="134" fill="#38bdf8" font-family="JetBrains Mono" font-size="7">y=2.63m</text>
+          <!-- Dots: some before (below) the line, some after (above) -->
+          <circle cx="260" cy="160" r="4" fill="#38bdf8"/>
+          <circle cx="280" cy="155" r="4" fill="#38bdf8"/>
+          <circle cx="300" cy="165" r="4" fill="#38bdf8"/>
+          <circle cx="270" cy="105" r="4" fill="#10b981"/>
+          <circle cx="290" cy="100" r="4" fill="#10b981"/>
+          <!-- Direction arrow -->
+          <line x1="280" y1="175" x2="280" y2="85" stroke="#3e4d68" stroke-width="1" stroke-dasharray="4,3"/>
+          <polygon points="277,88 280,78 283,88" fill="#3e4d68"/>
+          <text x="294" y="82" fill="#3e4d68" font-family="JetBrains Mono" font-size="6">FLOW →</text>
+          <!-- Dimensions -->
+          <text x="280" y="66" text-anchor="middle" fill="#3e4d68" font-family="JetBrains Mono" font-size="7">2.55m × 1.2m</text>
+
+
+          
+
           <!-- Seat rows -->
           <g opacity="0.3">
             <rect x="310" y="145" width="45" height="12" rx="2" fill="none" stroke="#7b8ba5" stroke-width="0.8"/>
@@ -741,12 +765,12 @@
         </svg>
       </div>
       <div class="info-panel">
-        <p>The 5 detected hotspots are projected through a <strong>Homography matrix (H)</strong> that "unfolds" the perspective-distorted side view into a geometrically accurate top-down virtual map.</p>
-        <p>The virtual bus uses real-world dimensions: <strong>2.55m width</strong> (standard Chinese bus) and <strong>1.2m door opening</strong>. This ensures every pixel coordinate in the virtual space corresponds to a real physical position.</p>
+        <p>The <strong>Homography Matrix H</strong> transforms the angled camera view into a metric top-down floor plan. Using the known bus width (2.55m) and door width (1.2m), we map all 5 detections into the virtual space.</p>
+        <p>In this unwarped view, the counting plane becomes a clean vertical line at <strong>x = 2.63m</strong> — the position of the interior pole.</p>
         <div class="tag-row">
-          <span class="tag">HOMOGRAPHY 3×3</span>
+          <span class="tag warn">HOMOGRAPHY</span>
           <span class="tag">TOP-DOWN MAPPING</span>
-          <span class="tag">5 DOTS PROJECTED</span>
+          <span class="tag">METRIC SPACE</span>
         </div>
       </div>
     </div>
