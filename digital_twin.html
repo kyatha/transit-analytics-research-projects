@@ -36,6 +36,7 @@
     color: var(--text);
     font-family: 'DM Sans', sans-serif;
     overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
   }
 
   /* ─── Grain Overlay ─── */
@@ -91,6 +92,9 @@
     top: 0;
     z-index: 100;
     background: linear-gradient(180deg, var(--bg) 70%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    flex-wrap: wrap;
   }
   .stage-btn {
     font-family: 'JetBrains Mono', monospace;
@@ -103,6 +107,8 @@
     cursor: pointer;
     transition: all 0.3s;
     letter-spacing: 0.5px;
+    text-decoration: none;
+
   }
   .stage-btn:hover { border-color: var(--accent); color: var(--text); }
   .stage-btn.active {
@@ -111,6 +117,13 @@
     color: var(--accent);
     box-shadow: 0 0 20px rgba(56,189,248,0.1);
   }
+  
+  .home-btn {
+    background: var(--surface-alt);
+    border-color: var(--purple);
+    color: var(--purple);
+  }
+  .home-btn:hover { background: var(--purple-glow); }
 
   /* ─── Flow Arrow ─── */
   .flow-connector {
@@ -193,6 +206,52 @@
   }
   @media (max-width: 700px) {
     .card-body { grid-template-columns: 1fr; }
+  }
+
+  .card-svg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    background: var(--surface-alt);
+    border-right: 1px solid var(--border);
+    min-height: 300px;
+  }
+  .card-svg svg {
+    width: 100%;
+    max-width: 380px;
+    height: auto;
+  }
+
+  .card-text {
+    padding: 26px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .card-text p {
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+  }
+  .card-text p strong { color: var(--text); }
+
+  .tag-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    padding: 4px 10px;
+    border-radius: 4px;
+    background: var(--accent-glow);
+    color: var(--accent);
+    border: 1px solid rgba(56,189,248,0.2);
+    letter-spacing: 0.5px;
   }
 
   .diagram-panel {
@@ -478,6 +537,133 @@
     background: rgba(244,114,182,0.12);
     border-color: #f472b6;
     color: #f472b6;
+  }
+
+  /* ─── Resources Section ─── */
+  .resources-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 18px 0;
+  }
+  .res-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface-alt);
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+  .res-btn:hover { border-color: var(--purple); color: var(--purple); background: var(--purple-glow); }
+  .res-btn.is-locked {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  .res-btn .res-icon { font-size: 1.1rem; }
+  .res-soon {
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: rgba(167,139,250,0.15);
+    color: var(--purple);
+    margin-left: auto;
+  }
+
+  .bibtex-block {
+    position: relative;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--purple);
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin-top: 16px;
+  }
+  .bibtex-block pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    line-height: 1.7;
+    color: var(--text-dim);
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0;
+  }
+  .bibtex-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--purple);
+    margin-bottom: 12px;
+  }
+  .copy-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    padding: 5px 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-dim);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .copy-btn:hover { border-color: var(--purple); color: var(--purple); }
+ /* ─── Animations ─── */
+  @keyframes pulse {
+    0%, 100% { r: 6; opacity: 0.8; }
+    50% { r: 10; opacity: 0.4; }
+  }
+  .hotspot { animation: pulse 2s ease-in-out infinite; }
+  .hotspot:nth-child(2) { animation-delay: 0.3s; }
+  .hotspot:nth-child(3) { animation-delay: 0.6s; }
+  .hotspot:nth-child(4) { animation-delay: 0.9s; }
+  .hotspot:nth-child(5) { animation-delay: 1.2s; }
+
+  @keyframes dashmove { to { stroke-dashoffset: -20; } }
+  .dash-anim { animation: dashmove 1s linear infinite; }
+
+  @keyframes planeGlow {
+    0%, 100% { stroke-opacity: 0.6; filter: drop-shadow(0 0 3px rgba(56,189,248,0.3)); }
+    50% { stroke-opacity: 1; filter: drop-shadow(0 0 8px rgba(56,189,248,0.6)); }
+  }
+  .glow-line { animation: planeGlow 2.5s ease-in-out infinite; }
+
+  @keyframes countUp {
+    0% { opacity: 0; transform: translateY(8px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── Footer ─── */
+  .page-footer {
+    text-align: center;
+    padding: 50px 24px 36px;
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    line-height: 1.8;
+  }
+
+  /* ─── Responsive ─── */
+  @media (max-width: 700px) {
+    .card-body { grid-template-columns: 1fr; }
+    .card-svg { border-right: none; border-bottom: 1px solid var(--border); min-height: 220px; }
+    .stage-nav { gap: 3px; padding: 20px 10px 8px; }
+    .stage-btn { font-size: 0.6rem; padding: 6px 10px; }
+    .resources-grid { grid-template-columns: 1fr; }
+    .header h1 { font-size: 1.6rem; }
   }
 
 </style>
@@ -1075,6 +1261,7 @@
   </table>
 </div>
 <div class="flow-connector"><div class="flow-arrow"></div></div>
+  
 <!-- ═══════════════ STAGE 7: RESOURCES ═══════════════ -->
 <div class="stage" id="stage-6">
   <div class="card">
