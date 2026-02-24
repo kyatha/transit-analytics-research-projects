@@ -644,6 +644,57 @@
     100% { opacity: 1; transform: translateY(0); }
   }
 
+
+  /* ─── Next Project ─── */
+  .next-project {
+    max-width: 900px;
+    margin: 60px auto 0;
+    padding: 0 24px;
+  }
+  .next-project-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+  .next-project-card {
+    display: block;
+    text-decoration: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 32px 36px;
+    transition: border-color 0.3s, box-shadow 0.3s, transform 0.2s;
+  }
+  .next-project-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 24px var(--accent-glow);
+    transform: translateY(-2px);
+  }
+  .next-project-card h3 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
+    line-height: 1.4;
+  }
+  .next-project-card p {
+    font-size: 0.92rem;
+    color: var(--text-dim);
+    line-height: 1.65;
+    margin-bottom: 14px;
+  }
+  .next-project-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+  }
+
+
   /* ─── Footer ─── */
   .page-footer {
     text-align: center;
@@ -1304,6 +1355,16 @@
       </div>
     </div>
   </div>
+</div>
+
+<!-- ═══════════════ NEXT PROJECT ═══════════════ -->
+<div class="next-project">
+  <div class="next-project-label">Next Project</div>
+  <a href="driver_behaviour.html" class="next-project-card">
+    <h3>AnomalyCLIP for Driver Behaviour Recognition in Sub-Saharan Transit</h3>
+    <p>Adapting vision-language anomaly detection to classify risky driving patterns — phone use, drowsiness, erratic steering — from dashcam footage across Nairobi's matatu fleet, without per-class labelled training data.</p>
+    <span class="next-project-tag">AnomalyCLIP · Driver Safety · Zero-Shot Detection →</span>
+  </a>
 </div>
 
 <!-- ═══════════════ FOOTER ═══════════════ -->
