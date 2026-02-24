@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy-by-Architecture — Passenger Counting Privacy</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #06090f;
+  --surface: #0d1320;
+  --surface-alt: #111c2e;
+  --surface-raised: #162032;
+  --border: #1a2640;
+  --border-light: #243352;
+  --text: #e4eaf2;
+  --text-dim: #a0b4cc;
+  --text-muted: #5e7a9a;
+  --cyan: #38bdf8;
+  --cyan-glow: rgba(56,189,248,0.08);
+  --green: #34d399;
+  --green-glow: rgba(52,211,153,0.08);
+  --green-dim: rgba(52,211,153,0.12);
+  --purple: #a78bfa;
+  --purple-glow: rgba(167,139,250,0.08);
+  --orange: #fb923c;
+  --orange-glow: rgba(251,146,60,0.08);
+  --red: #f87171;
+  --red-glow: rgba(248,113,113,0.06);
+  --red-dim: rgba(248,113,113,0.12);
+  --pink: #f472b6;
+  --yellow: #fbbf24;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  overflow-x: hidden;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ─── NAV ─── */
+.stage-nav {
+  display: flex; justify-content: center; gap: 4px;
+  padding: 16px 20px 12px; position: sticky; top: 0; z-index: 100;
+  background: linear-gradient(180deg, var(--bg) 70%, transparent);
+  flex-wrap: wrap;
+}
+.stage-btn {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 600;
+  padding: 9px 16px; border: 1px solid var(--border); background: var(--surface);
+  color: var(--text-dim); border-radius: 6px; cursor: pointer; transition: all 0.3s;
+  letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap;
+}
+.stage-btn:hover { border-color: var(--green); color: var(--text); }
+.stage-btn.active {
+  background: var(--green-glow); border-color: var(--green);
+  color: var(--green); box-shadow: 0 0 20px rgba(52,211,153,0.08);
+}
+.stage-btn.home-btn { border-color: var(--text-muted); color: var(--text-muted); }
+.stage-btn.home-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+/* ─── HERO ─── */
+.hero { text-align: center; padding: 80px 28px 60px; position: relative; }
+.hero::after {
+  content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 80px; height: 1px; background: var(--green); opacity: 0.4;
+}
+.badge {
+  display: inline-block; font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem; font-weight: 600; letter-spacing: 2px;
+  padding: 6px 16px; border-radius: 4px; margin-bottom: 24px; text-transform: uppercase;
+}
+.badge.green { color: var(--green); border: 1px solid rgba(52,211,153,0.3); background: var(--green-glow); }
+.badge.wip { color: var(--orange); border: 1px solid rgba(251,146,60,0.3); background: var(--orange-glow); margin-left: 8px; }
+.hero h1 {
+  font-family: 'JetBrains Mono', monospace; font-size: clamp(1.8rem, 4.5vw, 2.8rem);
+  font-weight: 700; letter-spacing: -1px; margin-bottom: 16px; line-height: 1.2;
+}
+.hero h1 .accent { color: var(--green); }
+.hero-tagline { font-size: 1.08rem; color: var(--text-dim); max-width: 680px; margin: 0 auto 28px; line-height: 1.7; }
+.hero-meta {
+  display: flex; gap: 24px; justify-content: center; flex-wrap: wrap;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-muted);
+}
+
+/* ─── LAYOUT ─── */
+.container { max-width: 860px; margin: 0 auto; padding: 0 28px; }
+.section-anchor { scroll-margin-top: 80px; }
+.section-break { padding: 60px 0 40px; }
+.section-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 700;
+  letter-spacing: 2px; margin-bottom: 28px; text-transform: uppercase;
+}
+.section-intro { font-size: 1.02rem; color: var(--text-dim); line-height: 1.75; margin-bottom: 28px; }
+
+/* ─── PARADOX ─── */
+.paradox-box {
+  background: linear-gradient(135deg, var(--red-glow), var(--green-glow));
+  border: 1px solid var(--border); border-radius: 10px; padding: 32px;
+  margin: 28px 0 40px; position: relative; overflow: hidden;
+}
+.paradox-box::before {
+  content: ''; position: absolute; top: -1px; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--red), var(--green));
+}
+.paradox-title {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.88rem; font-weight: 700;
+  letter-spacing: 1px; color: var(--orange); margin-bottom: 12px;
+}
+.paradox-box p { color: var(--text-dim); font-size: 0.98rem; line-height: 1.75; }
+.paradox-box em { color: var(--text); font-style: italic; }
+
+/* ─── THREATS ─── */
+.threat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 20px 0 40px; }
+.threat-card {
+  background: var(--surface); border: 1px solid rgba(248,113,113,0.15);
+  border-radius: 8px; padding: 20px; transition: border-color 0.3s, transform 0.3s;
+}
+.threat-card:hover { border-color: rgba(248,113,113,0.4); transform: translateY(-2px); }
+.threat-card.warn { border-color: rgba(251,146,60,0.2); }
+.threat-card.warn:hover { border-color: rgba(251,146,60,0.5); }
+.threat-id { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 700; letter-spacing: 1px; color: var(--red); margin-bottom: 6px; }
+.threat-card.warn .threat-id { color: var(--orange); }
+.threat-name { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.threat-desc { font-size: 0.88rem; color: var(--text-dim); line-height: 1.6; }
+
+/* ─── PIPELINE ─── */
+.pipeline-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 32px 24px; margin: 24px 0; overflow-x: auto; }
+.pipeline-row { display: flex; align-items: center; justify-content: center; gap: 0; min-width: 580px; }
+.pipe-node {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 600;
+  text-align: center; padding: 12px 14px; border: 1px solid var(--border);
+  border-radius: 6px; background: var(--surface-alt); color: var(--text-dim); line-height: 1.4; white-space: nowrap;
+}
+.pipe-node.red { border-color: rgba(248,113,113,0.3); background: var(--red-glow); color: var(--red); }
+.pipe-node.green { border-color: rgba(52,211,153,0.3); background: var(--green-glow); color: var(--green); }
+.pipe-arrow { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--text-muted); padding: 0 6px; flex-shrink: 0; }
+.ttl-row { display: flex; justify-content: center; gap: 16px; margin-top: 14px; flex-wrap: wrap; }
+.ttl-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: var(--red); background: var(--red-glow); padding: 4px 10px; border-radius: 3px; letter-spacing: 0.5px; }
+
+/* ─── TIERS ─── */
+.tier-stack { margin: 24px 0 40px; }
+.tier-block { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 28px; position: relative; overflow: hidden; }
+.tier-block::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+.tier-1::before { background: var(--green); }
+.tier-2::before { background: var(--cyan); }
+.tier-3::before { background: var(--purple); }
+.tier-num { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 700; letter-spacing: 2px; margin-bottom: 6px; }
+.tier-1 .tier-num { color: var(--green); }
+.tier-2 .tier-num { color: var(--cyan); }
+.tier-3 .tier-num { color: var(--purple); }
+.tier-title { font-family: 'JetBrains Mono', monospace; font-size: 1.02rem; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+.tier-desc { color: var(--text-dim); font-size: 0.95rem; line-height: 1.75; margin-bottom: 14px; }
+.tier-desc code { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--green); background: var(--green-dim); padding: 2px 8px; border-radius: 3px; }
+.tier-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: var(--text-muted); letter-spacing: 0.5px; }
+.tier-connector { text-align: center; padding: 8px 0; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--text-muted); }
+.blocked-badge { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 600; color: var(--red); background: var(--red-glow); padding: 6px 12px; border-radius: 4px; display: inline-block; margin-bottom: 12px; letter-spacing: 0.5px; }
+
+/* ─── TABLE ─── */
+.compliance-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.88rem; }
+.compliance-table th { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 700; letter-spacing: 1px; color: var(--text-muted); text-transform: uppercase; text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface); }
+.compliance-table td { padding: 14px 16px; border-bottom: 1px solid var(--border); color: var(--text-dim); vertical-align: top; line-height: 1.6; }
+.compliance-table tr:hover td { background: var(--surface-alt); }
+.tier-cell { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
+.law-ref { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text-muted); }
+
+/* ─── FEASIBILITY ─── */
+.feasibility-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 20px 0; }
+.feas-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 24px; }
+.feas-q { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 600; color: var(--green); margin-bottom: 10px; }
+.feas-a { font-size: 0.92rem; color: var(--text-dim); line-height: 1.65; }
+.feas-verdict { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 600; color: var(--green); margin-top: 12px; letter-spacing: 0.5px; }
+
+/* ─── RESOURCES GRID ─── */
+.resources-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 18px 0;
+}
+.res-btn {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+  display: flex; align-items: center; gap: 10px; padding: 14px 18px;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--surface-alt);
+  color: var(--text-dim); text-decoration: none; transition: all 0.3s; cursor: pointer;
+}
+.res-btn:hover { border-color: var(--green); color: var(--green); background: var(--green-glow); }
+.res-btn.is-locked { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+.res-btn .res-icon { font-size: 1.1rem; }
+.res-soon {
+  font-size: 0.6rem; padding: 2px 6px; border-radius: 3px;
+  background: rgba(52,211,153,0.12); color: var(--green); margin-left: auto;
+}
+
+/* ─── BIBTEX ─── */
+.bibtex-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; font-weight: 600;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--green); margin-bottom: 12px; margin-top: 24px;
+}
+.bibtex-block {
+  position: relative; background: var(--surface-alt); border: 1px solid var(--border);
+  border-left: 3px solid var(--green); border-radius: 8px; padding: 18px 22px;
+}
+.bibtex-block pre {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; line-height: 1.7;
+  color: var(--text-dim); white-space: pre-wrap; word-break: break-word; margin: 0;
+}
+.copy-btn {
+  position: absolute; top: 12px; right: 12px;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; padding: 5px 10px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text-muted);
+  border-radius: 4px; cursor: pointer; transition: all 0.3s;
+}
+.copy-btn:hover { border-color: var(--green); color: var(--green); }
+
+/* ─── STATUS ─── */
+.status-banner {
+  background: var(--orange-glow); border: 1px solid rgba(251,146,60,0.2);
+  border-radius: 8px; padding: 16px 24px; margin: 0 0 32px;
+  display: flex; align-items: center; gap: 12px;
+  font-size: 0.92rem; color: var(--text-dim);
+}
+.status-banner strong { color: var(--orange); }
+
+/* ─── NEXT PROJECT ─── */
+.next-project {
+  max-width: 860px; margin: 60px auto 0; padding: 0 28px;
+}
+.next-project-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+  text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-muted); margin-bottom: 14px;
+}
+.next-project-card {
+  display: block; text-decoration: none; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 12px; padding: 28px 32px;
+  transition: border-color 0.3s, box-shadow 0.3s, transform 0.2s;
+}
+.next-project-card:hover {
+  border-color: var(--cyan); box-shadow: 0 0 24px var(--cyan-glow); transform: translateY(-2px);
+}
+.next-project-card h3 {
+  font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; font-weight: 700;
+  color: var(--text); margin-bottom: 8px;
+}
+.next-project-card p { font-size: 0.92rem; color: var(--text-dim); line-height: 1.65; margin-bottom: 12px; }
+.next-project-tag {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--cyan); letter-spacing: 0.02em;
+}
+
+/* ─── REVEAL ─── */
+.reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+@media (max-width: 640px) {
+  .hero { padding: 60px 20px 40px; }
+  .container { padding: 0 16px; }
+  .threat-grid, .feasibility-grid { grid-template-columns: 1fr; }
+  .resources-grid { grid-template-columns: 1fr; }
+  .stage-btn { font-size: 0.68rem; padding: 7px 10px; }
+}
+</style>
+</head>
+<body>
+
+<nav class="stage-nav">
+  <button class="stage-btn home-btn" onclick="window.location.href='index.html'">PROJECTS HOME</button>
+  <button class="stage-btn active" onclick="goToSection('overview')">OVERVIEW</button>
+  <button class="stage-btn" onclick="goToSection('paradox')">PARADOX</button>
+  <button class="stage-btn" onclick="goToSection('threats')">THREATS</button>
+  <button class="stage-btn" onclick="goToSection('framework')">FRAMEWORK</button>
+  <button class="stage-btn" onclick="goToSection('compliance')">COMPLIANCE</button>
+  <button class="stage-btn" onclick="goToSection('feasibility')">FEASIBILITY</button>
+  <button class="stage-btn" onclick="goToSection('resources')">RESOURCES</button>
+</nav>
+
+<div class="section-anchor" id="overview"></div>
+<section class="hero">
+  <div>
+    <span class="badge green">OPINION PAPER</span>
+    <span class="badge wip">IN PROGRESS</span>
+  </div>
+  <h1>Privacy-by-<span class="accent">Architecture</span></h1>
+  <p class="hero-tagline">
+    Enforcing data protection as an architectural constraint in vision-based passenger counting systems
+    deployed across sub-Saharan Africa.
+  </p>
+  <div class="hero-meta">
+    <span>📍 Nairobi &amp; Kigali</span>
+    <span>⚖️ Kenya DPA · Rwanda DPA</span>
+    <span>🔒 Three-Tier Framework</span>
+  </div>
+</section>
+
+<div class="container">
+
+  <div class="status-banner reveal">
+    <span style="font-size:1.2rem; flex-shrink:0;">🔬</span>
+    <span><strong>Active research.</strong> The privacy framework is being validated against real deployment data to assess impact on counting performance. The opinion paper below presents the concept design.</span>
+  </div>
+
+  <!-- 02 PARADOX -->
+  <div class="section-anchor" id="paradox"></div>
+  <div class="section-break reveal">
+    <h2 class="section-label" style="color: var(--orange);">THE REID–ANONYMISATION PARADOX</h2>
+    <p class="section-intro">
+      Modern APC pipelines are <em>de facto</em> soft biometric systems. ReID embeddings, pose keypoints, and
+      appearance descriptors encode identity-bearing information for each individual boarding or exiting a bus —
+      yet these systems rarely receive the same privacy scrutiny as facial recognition.
+    </p>
+    <div class="paradox-box">
+      <div class="paradox-title">THE CORE TENSION</div>
+      <p>
+        Accurate passenger counting <em>necessitates</em> identity-bearing features to prevent double-counting
+        and recover tracks after occlusion. Yet retaining these features introduces surveillance risks.
+        The discriminative properties that resolve identity switches <em>also</em> facilitate cross-session
+        and cross-camera re-identification.
+      </p>
+    </div>
+    <p class="section-intro">
+      Face blurring is insufficient — ReID relies on full-body appearance cues rather than facial pixels.
+      In SSA transit, distinctive items (market goods, uniforms, work equipment) increase appearance
+      discriminability, enabling re-identification without facial detail. Skeleton-only processing is
+      also inadequate: removing appearance cues weakens occlusion recovery in crowded doorways.
+    </p>
+  </div>
+
+  <!-- 03 THREATS -->
+  <div class="section-anchor" id="threats"></div>
+  <div class="section-break reveal">
+    <h2 class="section-label" style="color: var(--red);">THREAT MODEL</h2>
+    <p class="section-intro">
+      While APC systems are designed for aggregate counting, modern tracking pipelines introduce distinct
+      privacy risks — particularly pronounced in growing economies where device security is weaker
+      and data governance frameworks are less mature.
+    </p>
+    <div class="threat-grid">
+      <div class="threat-card">
+        <div class="threat-id">A1</div>
+        <div class="threat-name">Embedding Persistence</div>
+        <div class="threat-desc">ReID embeddings stored in tracking buffers, ID repair queues, and re-association caches persist beyond counting need. Compromised edge devices become biometric databases.</div>
+      </div>
+      <div class="threat-card">
+        <div class="threat-id">A2</div>
+        <div class="threat-name">Failure-Mode Fabrication</div>
+        <div class="threat-desc">Ghost injection creates biometric records for people who don't exist. ID fragmentation splits individuals into multiple tracked identities, inflating the biometric footprint.</div>
+      </div>
+      <div class="threat-card">
+        <div class="threat-id">A3</div>
+        <div class="threat-name">Trajectory Inference</div>
+        <div class="threat-desc">Stop-level counts + mobile money traces enable trajectory re-identification. Sparse informal routes reduce the combinatorial space, making sequences more attributable.</div>
+      </div>
+      <div class="threat-card warn">
+        <div class="threat-id">A4</div>
+        <div class="threat-name">Factory CCTV</div>
+        <div class="threat-desc">Electric buses ship with factory-installed cameras. OEM data access (BYD, Higer) and ambiguous cross-border flows to foreign vendors bypass APC privacy controls entirely.</div>
+      </div>
+    </div>
+    <div class="pipeline-wrap">
+      <div class="pipeline-row">
+        <div class="pipe-node">Camera</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-node">YOLO<br>Detect</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-node red">ReID<br>Embed</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-node red">Pose<br>Estimate</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-node">Track &amp;<br>Count</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-node green">Count<br>Only</div>
+      </div>
+      <div class="ttl-row">
+        <span class="ttl-tag">✕ TTL expiry — embeddings destroyed</span>
+        <span class="ttl-tag">✕ TTL expiry — keypoints destroyed</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 04 FRAMEWORK -->
+  <div class="section-anchor" id="framework"></div>
+  <div class="section-break reveal">
+    <h2 class="section-label" style="color: var(--green);">THREE-TIER FRAMEWORK</h2>
+    <p class="section-intro">
+      Privacy must be integrated from sensor to output — not addressed as an add-on through anonymisation
+      filters. The framework is designed for deployment within the computational, connectivity, and
+      institutional constraints characteristic of SSA transit systems.
+    </p>
+    <div class="tier-stack">
+      <div class="tier-block tier-1">
+        <div class="tier-num">TIER 1</div>
+        <div class="tier-title">Ephemeral Edge Processing</div>
+        <div class="tier-desc">Biometric-adjacent representations (ReID embeddings, pose sequences) never leave the edge device. Hard TTL enforced from track initiation — embeddings destroyed after counting decision, not retained for the route. Cryptographic erasure when secure wiping is infeasible.</div>
+        <div class="tier-tag">DPA-K Sec. 25(d),(g) · Sec. 39 · Sec. 41–42 &nbsp;|&nbsp; DPA-R Art. 37(5) · Art. 38(1) · Art. 47</div>
+      </div>
+      <div class="tier-connector">▼</div>
+      <div class="tier-block tier-2">
+        <div class="tier-num">TIER 2</div>
+        <div class="tier-title">Count-Only Output Contract</div>
+        <div class="tier-desc">API restricted to the minimal tuple: <code>{timestamp, stop_id, direction, count}</code>. No embeddings, bounding boxes, or track IDs cross the boundary. Laplacian noise added for low-ridership stops.</div>
+        <div class="blocked-badge">✕ BLOCKED: No embeddings · No bboxes · No track IDs</div>
+        <div class="tier-tag">DPA-K Sec. 25(b)–(d),(h) · Sec. 48 · Sec. 49(1) &nbsp;|&nbsp; DPA-R Art. 37 · Art. 49</div>
+      </div>
+      <div class="tier-connector">▼</div>
+      <div class="tier-block tier-3">
+        <div class="tier-num">TIER 3</div>
+        <div class="tier-title">Regulatory Alignment</div>
+        <div class="tier-desc">Each technical control mapped to specific DPA provisions (Kenya Act No. 24/2019, Rwanda Law No. 058/2021). DPIA conducted prior to processing. Breach protocol established. Precedent: <em>Katiba Institute v. Worldcoin</em> — absence of DPIA independently invalidates biometric processing.</div>
+        <div class="tier-tag">DPA-K Sec. 31 · Sec. 43 · Sec. 24(1)(b) &nbsp;|&nbsp; DPA-R Art. 38(3) · Art. 40–41 · Art. 53</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 05 COMPLIANCE -->
+  <div class="section-anchor" id="compliance"></div>
+  <div class="section-break reveal">
+    <h2 class="section-label" style="color: var(--purple);">REGULATORY MAPPING</h2>
+    <p class="section-intro">
+      Mapped to two representative East African data protection regimes, both GDPR-inspired.
+      This supports portability to the growing number of African countries with enacted DPA laws.
+    </p>
+    <div style="overflow-x:auto;">
+      <table class="compliance-table">
+        <thead><tr><th>Tier</th><th>Statutory Hooks</th><th>How the Tier Satisfies the Obligation</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="tier-cell" style="color:var(--green);">Tier 1: Ephemeral Edge</span></td>
+            <td><span class="law-ref">DPA-K: Sec. 25(d),(g); Sec. 39; Sec. 41–42<br>DPA-R: Art. 37(5); Art. 38(1); Art. 47</span></td>
+            <td>Minimisation &amp; storage limitation: keep identity-bearing signals only as long as necessary. Deletion at expiry. Security by design: encryption proportionate to risk.</td>
+          </tr>
+          <tr>
+            <td><span class="tier-cell" style="color:var(--cyan);">Tier 2: Count-Only</span></td>
+            <td><span class="law-ref">DPA-K: Sec. 25(b)–(d),(h); Sec. 48; Sec. 49(1)<br>DPA-R: Art. 37; Art. 49</span></td>
+            <td>Purpose limitation: restrict outputs to what is necessary. Data minimisation by default. Cross-border transfer safeguards for sensitive data.</td>
+          </tr>
+          <tr>
+            <td><span class="tier-cell" style="color:var(--purple);">Tier 3: Governance</span></td>
+            <td><span class="law-ref">DPA-K: Sec. 31; Sec. 43; Sec. 24(1)(b)<br>DPA-R: Art. 38(3); Art. 40–41; Art. 53</span></td>
+            <td>Conduct DPIA prior to processing. Breach response within statutory timelines. Designate DPO for regular monitoring.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 06 FEASIBILITY -->
+  <div class="section-anchor" id="feasibility"></div>
+  <div class="section-break reveal">
+    <h2 class="section-label" style="color: var(--green);">PRELIMINARY FEASIBILITY</h2>
+    <p class="section-intro">
+      Assessed through architectural analysis of an actual APC system deployed on public transit buses
+      in two East African cities. Does each tier introduce fundamental barriers to counting accuracy?
+    </p>
+    <div class="feasibility-grid">
+      <div class="feas-card">
+        <div class="feas-q">Is ephemeral processing compatible with counting?</div>
+        <div class="feas-a">Embeddings associate detections across frames to prevent double-counting. Once an individual is tracked from door to seated position, the decision is finalised. A TTL of tens of seconds accommodates most boarding events in informal transit.</div>
+        <div class="feas-verdict">✓ NO FUNDAMENTAL BARRIER</div>
+      </div>
+      <div class="feas-card">
+        <div class="feas-q">Does count-only output sacrifice utility?</div>
+        <div class="feas-a">The count-only tuple preserves all information necessary for transit planning — route-level ridership, stop-level demand, temporal patterns — while eliminating individually-identifiable data.</div>
+        <div class="feas-verdict">✓ NO FUNDAMENTAL BARRIER</div>
+      </div>
+      <div class="feas-card">
+        <div class="feas-q">Compliance gap audit</div>
+        <div class="feas-a">Three gaps found: (a) no formal TTL on embedding buffers, (b) diagnostic logs containing track-level data, (c) no DPIA for ReID processing. All are engineering fixes, not architectural barriers.</div>
+        <div class="feas-verdict">✓ MODERATE ENGINEERING EFFORT</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESOURCES -->
+  <div class="section-anchor" id="resources"></div>
+  <div class="section-break reveal">
+    <h2 class="section-label" style="color: var(--cyan);">RESOURCES</h2>
+    <p class="section-intro">
+      Access project materials and cite this work. The framework is being validated on real deployment data.
+    </p>
+
+    <div class="resources-grid">
+      <a href="PrivacybyDesign_v1.pdf" class="res-btn" target="_blank">
+        <span class="res-icon">📄</span> Opinion Paper (PDF)
+      </a>
+      <a href="#" class="res-btn" style="pointer-events:none; opacity:0.5;">
+        <span class="res-icon">📊</span> Empirical Results <span class="res-soon">Coming soon</span>
+      </a>
+      <a href="#" class="res-btn" style="pointer-events:none; opacity:0.5;">
+        <span class="res-icon">🖥️</span> Slides <span class="res-soon">Coming soon</span>
+      </a>
+      <span class="res-btn is-locked" title="Proprietary to partner transit operators">
+        <span class="res-icon">🔒</span> Deployment Data <span class="res-soon">Proprietary</span>
+      </span>
+    </div>
+
+    <div class="bibtex-label">BIBTEX CITATION</div>
+    <div class="bibtex-block">
+      <button class="copy-btn" onclick="copyBibtex()">⧉ Copy</button>
+      <pre><code id="bibtex-code">@article{kyatha2026privacyarch,
+  title     = {Privacy-by-Architecture for Passenger
+               Counting in Growing Economies},
+  author    = {Kyatha, Nthenya and Kyatha, Nduku
+               and Taneja, Jay},
+  year      = {2026},
+  note      = {Opinion paper. University of Massachusetts
+               Amherst. Three-tier framework: ephemeral
+               edge processing, count-only output contracts,
+               DPA regulatory alignment.}
+}</code></pre>
+    </div>
+  </div>
+
+</div>
+
+<!-- ─── NEXT PROJECT ─── -->
+<div class="next-project">
+  <div class="next-project-label">Next Project</div>
+  <a href="digital_twin.html" class="next-project-card">
+    <h3>3D Digital Twin Passenger Counting</h3>
+    <p>Multi-modal detection with homography-based 3D counting plane for transit buses. Virtual bus projection resolves occlusion at high-angle doorway cameras.</p>
+    <span class="next-project-tag">Homography · BoTSORT · Density Heatmap · Nairobi &amp; Kigali →</span>
+  </a>
+</div>
+
+<div style="height:40px;"></div>
+
+<script>
+const sections = ['overview','paradox','threats','framework','compliance','feasibility','resources'];
+function goToSection(id) {
+  document.querySelectorAll('.stage-btn:not(.home-btn)').forEach(b => b.classList.remove('active'));
+  const idx = sections.indexOf(id);
+  const btns = document.querySelectorAll('.stage-btn:not(.home-btn)');
+  if (btns[idx]) btns[idx].classList.add('active');
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function copyBibtex() {
+  const text = document.getElementById('bibtex-code').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✓ Copied';
+    btn.style.color = 'var(--green)';
+    btn.style.borderColor = 'var(--green)';
+    setTimeout(() => {
+      btn.textContent = '⧉ Copy';
+      btn.style.color = '';
+      btn.style.borderColor = '';
+    }, 2000);
+  });
+}
+const obs = new IntersectionObserver(es => {
+  es.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.08 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+window.addEventListener('scroll', () => {
+  let cur = sections[0];
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top <= 120) cur = id;
+  });
+  document.querySelectorAll('.stage-btn:not(.home-btn)').forEach(b => b.classList.remove('active'));
+  const idx = sections.indexOf(cur);
+  const btns = document.querySelectorAll('.stage-btn:not(.home-btn)');
+  if (btns[idx]) btns[idx].classList.add('active');
+});
+</script>
+</body>
+</html>
