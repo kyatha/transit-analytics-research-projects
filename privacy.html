@@ -367,7 +367,7 @@ body::before {
         <div class="threat-desc">Electric buses ship with factory-installed cameras. OEM data access (BYD, Higer) and ambiguous cross-border flows to foreign vendors bypass APC privacy controls entirely.</div>
       </div>
     </div>
-    <div class="pipeline-wrap">
+    <!-- <div class="pipeline-wrap">
       <div class="pipeline-row">
         <div class="pipe-node">Camera</div>
         <div class="pipe-arrow">→</div>
@@ -385,7 +385,14 @@ body::before {
         <span class="ttl-tag">✕ TTL expiry — embeddings destroyed</span>
         <span class="ttl-tag">✕ TTL expiry — keypoints destroyed</span>
       </div>
-    </div>
+    </div> -->
+
+  <figure class="threat-model-wrap" style="text-align: center; margin: 40px 0;">
+    <img src="images/threat-model.svg" alt="APC Threat Model Diagram" style="width: 100%; max-width: 900px;">
+    <figcaption style="margin-top: 20px; font-size: 0.9em; color: #666; max-width: 800px; margin-left: auto; margin-right: auto; text-align: left; border-left: 4px solid var(--red); padding-left: 15px;">
+      <strong>Figure 1:</strong> Threat model for vision-based transit surveillance. Attack vectors A1–A3 (solid, red) target purpose-built APC pipelines. Vector A4 (dashed, orange) targets factory-fitted CCTV on electric buses. Gray dashed boxes indicate SSA risk amplifiers.
+    </figcaption>
+  </figure>
   </div>
 
   <!-- 04 FRAMEWORK -->
