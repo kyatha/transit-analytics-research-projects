@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Driver Behaviour Analysis — AnomalyCLIP</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #06090f;
+  --surface: #0d1320;
+  --surface-alt: #111c2e;
+  --surface-raised: #162032;
+  --border: #1a2640;
+  --border-light: #243352;
+  --text: #e4eaf2;
+  --text-dim: #a0b4cc;
+  --text-muted: #5e7a9a;
+  --cyan: #38bdf8;
+  --cyan-glow: rgba(56,189,248,0.08);
+  --green: #34d399;
+  --green-glow: rgba(52,211,153,0.08);
+  --green-dim: rgba(52,211,153,0.12);
+  --purple: #a78bfa;
+  --purple-glow: rgba(167,139,250,0.08);
+  --orange: #fb923c;
+  --orange-glow: rgba(251,146,60,0.08);
+  --orange-dim: rgba(251,146,60,0.12);
+  --red: #f87171;
+  --red-glow: rgba(248,113,113,0.06);
+  --pink: #f472b6;
+  --yellow: #fbbf24;
+  --yellow-glow: rgba(251,191,36,0.08);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  overflow-x: hidden;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ─── NAV ─── */
+.stage-nav {
+  display: flex; justify-content: center; gap: 4px;
+  padding: 16px 20px 12px; position: sticky; top: 0; z-index: 100;
+  background: linear-gradient(180deg, var(--bg) 70%, transparent);
+  flex-wrap: wrap;
+}
+.stage-btn {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 600;
+  padding: 9px 16px; border: 1px solid var(--border); background: var(--surface);
+  color: var(--text-dim); border-radius: 6px; cursor: pointer; transition: all 0.3s;
+  letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap;
+}
+.stage-btn:hover { border-color: var(--orange); color: var(--text); }
+.stage-btn.active {
+  background: var(--orange-glow); border-color: var(--orange);
+  color: var(--orange); box-shadow: 0 0 20px rgba(251,146,60,0.08);
+}
+.stage-btn.home-btn { border-color: var(--text-muted); color: var(--text-muted); }
+.stage-btn.home-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+/* ─── HERO ─── */
+.hero { text-align: center; padding: 80px 28px 60px; position: relative; }
+.hero::after {
+  content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 80px; height: 1px; background: var(--orange); opacity: 0.4;
+}
+.badge {
+  display: inline-block; font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem; font-weight: 600; letter-spacing: 2px;
+  padding: 6px 16px; border-radius: 4px; margin-bottom: 24px; text-transform: uppercase;
+}
+.badge.orange { color: var(--orange); border: 1px solid rgba(251,146,60,0.3); background: var(--orange-glow); }
+.badge.wip { color: var(--yellow); border: 1px solid rgba(251,191,36,0.3); background: var(--yellow-glow); margin-left: 8px; }
+.hero h1 {
+  font-family: 'JetBrains Mono', monospace; font-size: clamp(1.8rem, 4.5vw, 2.8rem);
+  font-weight: 700; letter-spacing: -1px; margin-bottom: 16px; line-height: 1.2;
+}
+.hero h1 .accent { color: var(--orange); }
+.hero-tagline { font-size: 1.08rem; color: var(--text-dim); max-width: 680px; margin: 0 auto 28px; line-height: 1.7; }
+.hero-meta {
+  display: flex; gap: 24px; justify-content: center; flex-wrap: wrap;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-muted);
+}
+
+/* ─── LAYOUT ─── */
+.container { max-width: 860px; margin: 0 auto; padding: 0 28px; }
+.section-anchor { scroll-margin-top: 80px; }
+.section-break { padding: 60px 0 40px; }
+.section-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 700;
+  letter-spacing: 2px; margin-bottom: 28px; text-transform: uppercase;
+}
+.section-intro { font-size: 1.02rem; color: var(--text-dim); line-height: 1.75; margin-bottom: 28px; }
+
+/* ─── STATUS ─── */
+.status-banner {
+  background: var(--orange-glow); border: 1px solid rgba(251,146,60,0.2);
+  border-radius: 8px; padding: 16px 24px; margin: 0 0 32px;
+  display: flex; align-items: center; gap: 12px;
+  font-size: 0.92rem; color: var(--text-dim);
+}
+.status-banner strong { color: var(--orange); }
+
+/* ─── PROBLEM CARDS ─── */
+.problem-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0 40px;
+}
+.problem-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 24px; position: relative; overflow: hidden;
+}
+.problem-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+}
+.problem-card.vad::before { background: var(--text-muted); }
+.problem-card.var::before { background: var(--orange); }
+.pc-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 700;
+  letter-spacing: 1.5px; margin-bottom: 8px; text-transform: uppercase;
+}
+.problem-card.vad .pc-label { color: var(--text-muted); }
+.problem-card.var .pc-label { color: var(--orange); }
+.pc-question {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.92rem;
+  font-weight: 600; color: var(--text); margin-bottom: 10px;
+}
+.pc-output {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+  padding: 6px 12px; border-radius: 4px; display: inline-block; margin-bottom: 10px;
+}
+.problem-card.vad .pc-output { background: rgba(94,122,154,0.12); color: var(--text-muted); }
+.problem-card.var .pc-output { background: var(--orange-dim); color: var(--orange); }
+.pc-example { font-size: 0.88rem; color: var(--text-dim); line-height: 1.6; }
+
+/* ─── PIPELINE ─── */
+.pipeline-wrap {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 32px 24px; margin: 24px 0; overflow-x: auto;
+}
+.pipeline-row { display: flex; align-items: center; justify-content: center; gap: 0; min-width: 620px; }
+.pipe-node {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 600;
+  text-align: center; padding: 12px 14px; border: 1px solid var(--border);
+  border-radius: 6px; background: var(--surface-alt); color: var(--text-dim);
+  line-height: 1.4; white-space: nowrap;
+}
+.pipe-node.orange { border-color: rgba(251,146,60,0.3); background: var(--orange-glow); color: var(--orange); }
+.pipe-node.cyan { border-color: rgba(56,189,248,0.3); background: var(--cyan-glow); color: var(--cyan); }
+.pipe-node.green { border-color: rgba(52,211,153,0.3); background: var(--green-glow); color: var(--green); }
+.pipe-arrow { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--text-muted); padding: 0 6px; flex-shrink: 0; }
+
+/* ─── INNOVATION CARDS ─── */
+.innov-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 20px 0 40px; }
+.innov-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 24px; transition: border-color 0.3s, transform 0.3s;
+}
+.innov-card:hover { transform: translateY(-2px); }
+.innov-card:nth-child(1) { border-top: 2px solid var(--orange); }
+.innov-card:nth-child(2) { border-top: 2px solid var(--cyan); }
+.innov-card:nth-child(3) { border-top: 2px solid var(--purple); }
+.innov-num {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 700;
+  letter-spacing: 1px; margin-bottom: 6px;
+}
+.innov-card:nth-child(1) .innov-num { color: var(--orange); }
+.innov-card:nth-child(2) .innov-num { color: var(--cyan); }
+.innov-card:nth-child(3) .innov-num { color: var(--purple); }
+.innov-title {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.88rem;
+  font-weight: 600; color: var(--text); margin-bottom: 10px;
+}
+.innov-desc { font-size: 0.88rem; color: var(--text-dim); line-height: 1.65; }
+
+/* ─── BEHAVIOUR CLASSES ─── */
+.class-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px; margin: 20px 0 40px;
+}
+.class-chip {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 14px 16px;
+  display: flex; align-items: center; gap: 10px;
+  transition: border-color 0.3s;
+}
+.class-chip:hover { border-color: var(--orange); }
+.class-chip .chip-icon { font-size: 1.2rem; flex-shrink: 0; }
+.class-chip .chip-text {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+  font-weight: 600; color: var(--text-dim);
+}
+.class-chip.normal { border-color: rgba(52,211,153,0.3); }
+.class-chip.normal .chip-text { color: var(--green); }
+
+/* ─── VISION SECTION ─── */
+.vision-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 20px 0; }
+.vision-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 24px; transition: border-color 0.3s, transform 0.3s;
+}
+.vision-card:hover { transform: translateY(-2px); }
+.vc-icon { font-size: 1.5rem; margin-bottom: 12px; }
+.vc-title {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.82rem;
+  font-weight: 600; color: var(--text); margin-bottom: 8px;
+}
+.vc-desc { font-size: 0.88rem; color: var(--text-dim); line-height: 1.6; }
+
+/* ─── FEATURE GRID (reuse) ─── */
+.feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 20px 0 40px; }
+.feature-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 24px; text-align: center;
+  transition: border-color 0.3s, transform 0.3s;
+}
+.feature-card:hover { border-color: var(--orange); transform: translateY(-2px); }
+.fc-icon { font-size: 1.8rem; margin-bottom: 12px; }
+.fc-title {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+  font-weight: 700; letter-spacing: 1px; color: var(--text); margin-bottom: 8px;
+}
+.fc-desc { font-size: 0.88rem; color: var(--text-dim); line-height: 1.6; }
+
+/* ─── PILL ─── */
+.pill-row { display: flex; gap: 6px; flex-wrap: wrap; margin: 20px 0; justify-content: center; }
+.pill {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; font-weight: 600;
+  padding: 5px 12px; border-radius: 4px; letter-spacing: 0.5px;
+  background: var(--surface-alt); border: 1px solid var(--border); color: var(--text-dim);
+}
+.pill.orange { color: var(--orange); border-color: rgba(251,146,60,0.3); background: var(--orange-glow); }
+
+/* ─── RESOURCES GRID ─── */
+.resources-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 18px 0;
+}
+.res-btn {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+  display: flex; align-items: center; gap: 10px; padding: 14px 18px;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--surface-alt);
+  color: var(--text-dim); text-decoration: none; transition: all 0.3s; cursor: pointer;
+}
+.res-btn:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-glow); }
+.res-btn.is-locked { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+.res-btn .res-icon { font-size: 1.1rem; }
+.res-soon {
+  font-size: 0.6rem; padding: 2px 6px; border-radius: 3px;
+  background: rgba(251,146,60,0.12); color: var(--orange); margin-left: auto;
+}
+
+/* ─── BIBTEX ─── */
+.bibtex-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; font-weight: 600;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--orange); margin-bottom: 12px; margin-top: 24px;
+}
+.bibtex-block {
+  position: relative; background: var(--surface-alt); border: 1px solid var(--border);
+  border-left: 3px solid var(--orange); border-radius: 8px; padding: 18px 22px;
+}
+.bibtex-block pre {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; line-height: 1.7;
+  color: var(--text-dim); white-space: pre-wrap; word-break: break-word; margin: 0;
+}
+.copy-btn {
+  position: absolute; top: 12px; right: 12px;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; padding: 5px 10px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text-muted);
+  border-radius: 4px; cursor: pointer; transition: all 0.3s;
+}
+.copy-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+/* ─── NEXT PROJECT ─── */
+.next-project {
+  max-width: 860px; margin: 60px auto 0; padding: 0 28px;
+}
+.next-project-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+  text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-muted); margin-bottom: 14px;
+}
+.next-project-card {
+  display: block; text-decoration: none; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 12px; padding: 28px 32px;
+  transition: border-color 0.3s, box-shadow 0.3s, transform 0.2s;
+}
+.next-project-card:hover {
+  border-color: var(--orange); box-shadow: 0 0 24px var(--orange-glow); transform: translateY(-2px);
+}
+.next-project-card h3 {
+  font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; font-weight: 700;
+  color: var(--text); margin-bottom: 8px;
+}
+.next-project-card p { font-size: 0.92rem; color: var(--text-dim); line-height: 1.65; margin-bottom: 12px; }
+.next-project-tag {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--orange); letter-spacing: 0.02em;
+}
+
+/* ─── REVEAL ─── */
+.reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+@media (max-width: 640px) {
+  .hero { padding: 60px 20px 40px; }
+  .container { padding: 0 16px; }
+  .problem-grid, .innov-grid { grid-template-columns: 1fr; }
+  .resources-grid { grid-template-columns: 1fr; }
+  .class-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  .stage-btn { font-size: 0.68rem; padding: 7px 10px; }
+}
+</style>
+</head>
+<body>
+
+<nav class="stage-nav">
+  <button class="stage-btn home-btn" onclick="window.location.href='index.html'">PROJECTS HOME</button>
+  <button class="stage-btn active" onclick="goToSection('overview')">OVERVIEW</button>
+  <button class="stage-btn" onclick="goToSection('problem')">PROBLEM</button>
+  <button class="stage-btn" onclick="goToSection('approach')">APPROACH</button>
+  <button class="stage-btn" onclick="goToSection('classes')">CLASSES</button>
+  <button class="stage-btn" onclick="goToSection('pipeline')">PIPELINE</button>
+  <button class="stage-btn" onclick="goToSection('vision')">VISION</button>
+  <button class="stage-btn" onclick="goToSection('resources')">RESOURCES</button>
+</nav>
+
+<div class="section-anchor" id="overview"></div>
+<section class="hero">
+  <div>
+    <span class="badge orange">SUPERVISED RESEARCH</span>
+    <span class="badge wip">SPRING 2026</span>
+  </div>
+  <h1>Driver <span class="accent">Behaviour</span> Analysis</h1>
+  <p class="hero-tagline">
+    Recognising distracted driving patterns on transit buses using vision-language models,
+    driver-facing CCTV, and telematics — toward a holistic understanding of driver behaviour
+    and its relationship to accidents.
+  </p>
+  <div class="hero-meta">
+    <span>🧠 AnomalyCLIP</span>
+    <span>🎥 Driver-Facing Camera</span>
+    <span>📡 Telematics Fusion</span>
+    <span>🚌 SSA Transit</span>
+  </div>
+</section>
+
+<div class="container">
+
+  <div class="status-banner reveal">
+    <span style="font-size:1.2rem; flex-shrink:0;">🚧</span>
+    <span><strong>Under active development</strong> — supervised undergraduate research (Spring 2026). Architecture details, evaluation metrics, and deployment strategy will be refined as the project progresses.</span>
+  </div>
+
+  <!-- 02 PROBLEM -->
+  <div class="section-anchor" id="problem"></div>
+  <div class="section-break reveal">
+    <h2 class="section-label" style="color: var(--red);">THE PROBLEM</h2>
+    <p class="section-intro">
+      Traditional video anomaly detection answers a binary question: <em>is something abnormal happening?</em>
+      For driver safety, this is insufficient. We need to know <em>what specific behaviour</em> is occurring
+      to deliver actionable insights to fleet operators.
+    </p>
+
+    <div class="problem-grid">
+      <div class="problem-card vad">
+        <div class="pc-label">VAD — Detection</div>
+        <div class="pc-question">"Is there an anomaly in this video?"</div>
+        <div class="pc-output">Binary → Normal / Anomaly</div>
+        <div class="pc-example">Dashcam feed → "Anomaly detected!" — but no detail on what happened. Not actionable for fleet management.</div>
+      </div>
+      <div class="problem-card var">
+        <div class="pc-label">VAR — Recognition</div>
+        <div class="pc-question">"What specific anomaly occurred?"</div>
+        <div class="pc-output">Multi-class → Named Behaviour</div>
+        <div class="pc-example">Dashcam feed → "Texting while driving" — actionable insight for safety scoring and intervention.</div>
+      </div>
+    </div>
+
+    <p class="section-intro">
+      Existing approaches (one-class, unsupervised, fully supervised) each have significant limitations.
+      Fully supervised methods require prohibitively expensive frame-level annotations. Weakly supervised
+      methods use only video-level labels but are limited to binary classification. AnomalyCLIP bridges this
+      gap — achieving multi-class recognition under weak supervision using vision-language alignment.
+    </p>
+  </div>
+
+  <!-- 03 APPROACH -->
+  <div class="section-anchor" id="approach"></div>
+  <div class="section-break reveal">
+    <h2 class="section-label" style="color: var(--orange);">ANOMALYCLIP APPROACH</h2>
+    <p class="section-intro">
+      AnomalyCLIP adapts OpenAI's CLIP for video anomaly recognition through three key innovations
+      that transform a general vision-language model into a specialised behaviour classifier — using
+      only video-level labels, no frame-by-frame annotation.
+    </p>
+
+    <div class="innov-grid">
+      <div class="innov-card">
+        <div class="innov-num">STEP 1</div>
+        <div class="innov-title">Re-centre Feature Space</div>
+        <div class="innov-desc">
+          Subtract a "normality prototype" (mean of all normal frame embeddings) from every frame.
+          After re-centring: <em>direction</em> encodes which anomaly type, <em>magnitude</em> encodes severity.
+        </div>
+      </div>
+      <div class="innov-card">
+        <div class="innov-num">STEP 2</div>
+        <div class="innov-title">Selector Model (Semantic MIL)</div>
+        <div class="innov-desc">
+          Multiple Instance Learning ranks all segments by anomaly likelihood. Top-K = most abnormal,
+          Bottom-K = most normal. CoOp prompt tuning creates text-based direction vectors per class.
+        </div>
+      </div>
+      <div class="innov-card">
+        <div class="innov-num">STEP 3</div>
+        <div class="innov-title">Temporal Model (Axial Transformer)</div>
+        <div class="innov-desc">
+          Adds time awareness — distracted driving is a temporal pattern, not a single frame.
+          Axial attention (within segments, then across) captures short- and long-term patterns efficiently.
+        </div>
+      </div>
+    </div>
+
+    <!-- Pipeline -->
+    <div class="pipeline-wrap">
+      <div class="pipeline-row">
+        <div class="pipe-node">Video<br>Frames</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-node orange">CLIP<br>Encoder</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-node orange">Re-centre<br>(−m)</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-node cyan">Selector<br>Top/Bot-K</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-node cyan">Temporal<br>Transformer</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-node green">Anomaly<br>Class</div>
+      </div>
+    </div>
+
+    <div class="pill-row">
+      <span class="pill">ViT-B/16</span>
+      <span class="pill">512-dim embeddings</span>
+      <span class="pill">32 segments × 16 frames</span>
+      <span class="pill">Top-3 / Bottom-3 MIL</span>
+      <span class="pill orange">7 loss functions</span>
+      <span class="pill">Video-level labels only</span>
+    </div>
+  </div>
+
+  <!-- 04 CLASSES -->
+  <div class="section-anchor" id="classes"></div>
+  <div class="section-break reveal">
+    <h2 class="section-label" style="color: var(--cyan);">DISTRACTION CLASSES</h2>
+    <p class="section-intro">
+      Instead of generic anomaly detection, we define specific distraction classes that replace
+      UCF-Crime categories with transit-relevant driver behaviours. Each becomes a learnable direction
+      in the re-centred CLIP feature space.
+    </p>
+
+    <div class="class-grid">
+      <div class="class-chip"><span class="chip-icon">📱</span><span class="chip-text">Texting</span></div>
+      <div class="class-chip"><span class="chip-icon">📞</span><span class="chip-text">Phone Call</span></div>
+      <div class="class-chip"><span class="chip-icon">🍔</span><span class="chip-text">Eating / Drinking</span></div>
+      <div class="class-chip"><span class="chip-icon">😴</span><span class="chip-text">Drowsy / Fatigued</span></div>
+      <div class="class-chip"><span class="chip-icon">👀</span><span class="chip-text">Looking Away</span></div>
+      <div class="class-chip"><span class="chip-icon">🤚</span><span class="chip-text">Reaching for Object</span></div>
+      <div class="class-chip"><span class="chip-icon">💄</span><span class="chip-text">Grooming</span></div>
+      <div class="class-chip"><span class="chip-icon">🎵</span><span class="chip-text">Adjusting Radio</span></div>
+      <div class="class-chip"><span class="chip-icon">🚬</span><span class="chip-text">Smoking</span></div>
+      <div class="class-chip normal"><span class="chip-icon">✅</span><span class="chip-text">Normal / Attentive</span></div>
+    </div>
+  </div>
+
+  <!-- 05 PIPELINE -->
+  <div class="section-anchor" id="pipeline"></div>
+  <div class="section-break reveal">
+    <h2 class="section-label" style="color: var(--purple);">TRAINING PIPELINE</h2>
+    <p class="section-intro">
+      The training pipeline leverages pre-extracted CLIP features. Only video-level labels are needed —
+      no expensive frame-by-frame annotation. The multi-loss objective (7 losses) constrains the model
+      under weak supervision.
+    </p>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="fc-icon">📂</div>
+        <div class="fc-title">DATA COLLECTION</div>
+        <div class="fc-desc">Driver-facing CCTV footage organised into normal (attentive) and anomaly (distracted) clips. Video-level labels only.</div>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">🔍</div>
+        <div class="fc-title">FEATURE EXTRACTION</div>
+        <div class="fc-desc">CLIP ViT-B/16 encodes sampled frames into 512-dimensional feature vectors. Pre-extracted and cached as .npy files.</div>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">🧭</div>
+        <div class="fc-title">NORMALITY CENTROID</div>
+        <div class="fc-desc">Mean of all normal driving features becomes the "centre of normal." 100+ diverse clips (day/night, rain/sun, highway/city) recommended.</div>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">⚡</div>
+        <div class="fc-title">TRAINING</div>
+        <div class="fc-desc">Selector + Temporal model trained with 7 coordinated losses: direction, classification, suppression, and regularisation terms.</div>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">🎯</div>
+        <div class="fc-title">INFERENCE</div>
+        <div class="fc-desc">Per-frame anomaly scores + class probabilities. Majority vote across high-confidence frames yields video-level prediction.</div>
+      </div>
+      <div class="feature-card">
+        <div class="fc-icon">📊</div>
+        <div class="fc-title">SAFETY SCORING</div>
+        <div class="fc-desc">Per-trip driver safety scores integrated with fleet management dashboards. Severity weighting by distraction type and duration.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 06 VISION -->
+  <div class="section-anchor" id="vision"></div>
+  <div class="section-break reveal">
+    <h2 class="section-label" style="color: var(--green);">BROADER VISION</h2>
+    <p class="section-intro">
+      Video-based behaviour recognition is the first layer. The full research vision integrates
+      telematics, spatial context, and fleet-level dashboards for a holistic study of driver behaviour
+      in relation to road accidents across SSA transit networks.
+    </p>
+
+    <div class="vision-grid">
+      <div class="vision-card" style="border-top: 2px solid var(--orange);">
+        <div class="vc-icon">🎥</div>
+        <div class="vc-title">Vision Layer</div>
+        <div class="vc-desc">AnomalyCLIP on driver-facing CCTV. Recognise specific distraction types in real-time. Leverages existing onboard camera infrastructure.</div>
+      </div>
+      <div class="vision-card" style="border-top: 2px solid var(--cyan);">
+        <div class="vc-icon">📡</div>
+        <div class="vc-title">Telematics Fusion</div>
+        <div class="vc-desc">Incorporate speed, acceleration, GPS location, braking patterns. Correlate visual behaviour events with vehicle dynamics for richer context.</div>
+      </div>
+      <div class="vision-card" style="border-top: 2px solid var(--green);">
+        <div class="vc-icon">📊</div>
+        <div class="vc-title">Fleet Dashboard</div>
+        <div class="vc-desc">Per-driver safety scores, route risk heatmaps, temporal patterns. Enable fleet operators to identify high-risk drivers and routes proactively.</div>
+      </div>
+      <div class="vision-card" style="border-top: 2px solid var(--purple);">
+        <div class="vc-icon">🔗</div>
+        <div class="vc-title">Accident Correlation</div>
+        <div class="vc-desc">Study the relationship between detected behaviour patterns and accident records. Build evidence base for targeted safety interventions in SSA transit.</div>
+      </div>
+    </div>
+
+    <div class="pill-row" style="margin-top:32px;">
+      <span class="pill">AnomalyCLIP</span>
+      <span class="pill">DASHCAM</span>
+      <span class="pill">DRIVER-FACING CCTV</span>
+      <span class="pill">ZERO-SHOT</span>
+      <span class="pill">VISION-LANGUAGE</span>
+      <span class="pill orange">VAR</span>
+      <span class="pill">TELEMATICS</span>
+      <span class="pill">FLEET SAFETY</span>
+    </div>
+  </div>
+
+  <!-- RESOURCES -->
+  <div class="section-anchor" id="resources"></div>
+  <div class="section-break reveal">
+    <h2 class="section-label" style="color: var(--cyan);">RESOURCES</h2>
+    <p class="section-intro">
+      Access reference materials for this project. Code and training data will be shared as the project matures.
+    </p>
+
+    <div class="resources-grid">
+      <a href="https://github.com/luca-zanella-dvl/AnomalyCLIP" class="res-btn" target="_blank">
+        <span class="res-icon">🔗</span> AnomalyCLIP Repo
+      </a>
+      <a href="https://arxiv.org/abs/2404.01014" class="res-btn" target="_blank">
+        <span class="res-icon">📄</span> Zanella et al. (2024)
+      </a>
+      <a href="#" class="res-btn" style="pointer-events:none; opacity:0.5;">
+        <span class="res-icon">🖥️</span> Project Slides <span class="res-soon">Coming soon</span>
+      </a>
+      <span class="res-btn is-locked" title="Under development">
+        <span class="res-icon">🔒</span> Training Code <span class="res-soon">Coming soon</span>
+      </span>
+    </div>
+
+    <div class="bibtex-label">REFERENCE</div>
+    <div class="bibtex-block">
+      <button class="copy-btn" onclick="copyBibtex()">⧉ Copy</button>
+      <pre><code id="bibtex-code">@inproceedings{zanella2024anomalyclip,
+  title     = {Delving into CLIP latent space for
+               Video Anomaly Recognition},
+  author    = {Zanella, Luca and Liberatori, Ben
+               and Menapace, Willi and Poiesi, Fabio
+               and Wang, Yiming and Ricci, Elisa},
+  booktitle = {Proc. European Conf. Computer Vision},
+  year      = {2024}
+}</code></pre>
+    </div>
+  </div>
+
+</div>
+
+<!-- ─── NEXT PROJECT ─── -->
+<div class="next-project">
+  <div class="next-project-label">Next Project</div>
+  <a href="privacy.html" class="next-project-card">
+    <h3>Privacy-by-Architecture for Passenger Counting</h3>
+    <p>Enforcing data protection as an architectural constraint in vision-based APC systems. Three-tier framework: ephemeral edge processing, count-only output contracts, and regulatory alignment with East African DPAs.</p>
+    <span class="next-project-tag">ReID–Anonymisation Paradox · Kenya DPA · Rwanda DPA →</span>
+  </a>
+</div>
+
+<div style="height:40px;"></div>
+
+<script>
+const sections = ['overview','problem','approach','classes','pipeline','vision','resources'];
+function goToSection(id) {
+  document.querySelectorAll('.stage-btn:not(.home-btn)').forEach(b => b.classList.remove('active'));
+  const idx = sections.indexOf(id);
+  const btns = document.querySelectorAll('.stage-btn:not(.home-btn)');
+  if (btns[idx]) btns[idx].classList.add('active');
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function copyBibtex() {
+  const text = document.getElementById('bibtex-code').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✓ Copied';
+    btn.style.color = 'var(--orange)';
+    btn.style.borderColor = 'var(--orange)';
+    setTimeout(() => {
+      btn.textContent = '⧉ Copy';
+      btn.style.color = '';
+      btn.style.borderColor = '';
+    }, 2000);
+  });
+}
+const obs = new IntersectionObserver(es => {
+  es.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.08 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+window.addEventListener('scroll', () => {
+  let cur = sections[0];
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top <= 120) cur = id;
+  });
+  document.querySelectorAll('.stage-btn:not(.home-btn)').forEach(b => b.classList.remove('active'));
+  const idx = sections.indexOf(cur);
+  const btns = document.querySelectorAll('.stage-btn:not(.home-btn)');
+  if (btns[idx]) btns[idx].classList.add('active');
+});
+</script>
+</body>
+</html>
